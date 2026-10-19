@@ -1,0 +1,72 @@
+<div class="hh-cook">
+  <div class="hh-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#94a3b8; font-weight:bold; margin-bottom:4px;">
+      <span>ПОМОЩНИК (Максимум 1)</span><span id="helper-name" style="color:#38bdf8;">Не выбран</span>
+    </div>
+    {{#if hasHelpers}}
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 6px;">
+        {{#each helpers}}
+          <div class="hh-helper-card" data-action="toggleHelper" data-bonus="{{this.bonus}}" data-name="{{this.name}}">
+            <img src="{{this.img}}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;">
+            <div style="font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color:#f8fafc;">{{this.name}}</div>
+            <div style="font-size: 9px; color: #10b981; font-weight:bold;">+{{this.bonus}} PB</div>
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <div style="text-align: center; color: gray; padding: 6px; font-size:11px;">Нет других персонажей</div>
+    {{/if}}
+  </div>
+
+  <div style="display: flex; gap: 10px;">
+    <div class="hh-card" style="flex-grow: 1; margin-bottom:10px;">
+      <label style="font-size:11px; color:#94a3b8; font-weight:bold;">БАЗА</label>
+      <select name="baseType" id="base-type" class="hh-sel">
+        {{#each typeOptions}}
+          <option value="{{this.key}}">{{this.label}}</option>
+        {{/each}}
+      </select>
+    </div>
+    <div class="hh-card" style="flex-grow: 1; margin-bottom:10px;">
+      <label style="font-size:11px; color:#94a3b8; font-weight:bold;">ПОРЦИИ</label>
+      <input type="number" name="portions" id="portions-inp" class="hh-inp" value="1" min="1">
+    </div>
+  </div>
+
+  <div class="hh-card">
+    <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; margin-bottom:6px;">
+      <span style="color:#94a3b8;">В КОТЕЛ:</span>
+      <span><b id="pot-weight" style="color:#ef4444;">0</b> / <b id="target-weight">1</b> фт.</span>
+    </div>
+    <div style="max-height: 140px; overflow-y: auto;" id="stacks-container">
+      {{#each groups as |items key|}}
+        <div class="ing-group" data-group="{{key}}" style="display: {{#if @first}}block{{else}}none{{/if}};">
+          {{#each items}}
+            <label style="display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 5px; border: 1px solid #334155; border-radius: 4px; margin-bottom: 3px; cursor: pointer;">
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <input type="checkbox" class="ing-cb" data-id="{{this.id}}" data-w="{{this.w}}" data-u="{{this.isU}}" data-type="{{this.type}}">
+                <img src="{{this.img}}" style="width: 22px; height: 22px; border-radius: 3px; object-fit: cover;">
+                <span style="font-size: 12px; color:#f8fafc;">{{this.name}}</span>
+              </div>
+              <div style="font-size: 10px; color: #94a3b8;">{{this.w}} фт. {{#if this.isU}}<span style="color:#f59e0b;" title="Неделимо">🔗</span>{{else}}<span title="Можно нарезать">✂️</span>{{/if}}</div>
+            </label>
+          {{/each}}
+        </div>
+      {{/each}}
+    </div>
+  </div>
+
+  <div class="hh-card" style="margin-bottom:10px;">
+    <label style="font-size:11px; color:#94a3b8; font-weight:bold;">ЭССЕНЦИЯ</label>
+    <select name="essId" id="ess-sel" class="hh-sel">
+      <option value="none">Без эссенции</option>
+      {{#each essencesList}}
+        <option value="{{this.id}}">{{this.name}} ({{this.rarity}})</option>
+      {{/each}}
+    </select>
+  </div>
+
+  <button type="submit" style="background: #0f172a; color: #f8fafc; border: 1px solid #475569; padding: 6px; border-radius: 4px; width: 100%; cursor: pointer;">
+    <i class="fas fa-fire"></i> Варить
+  </button>
+</div>

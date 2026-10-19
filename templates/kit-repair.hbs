@@ -1,0 +1,75 @@
+<div class="hh-app-content">
+  <div style="background: #0f172a; padding: 10px; border-radius: 6px; border: 1px solid #334155; margin-bottom: 10px; text-align:center;">
+    <h3 style="margin:0 0 4px; color:#38bdf8;">{{kitName}}</h3>
+    <div style="font-size: 13px; color: #f8fafc;">
+      Заряды: <b style="color: {{#if (eq mode 'upgrade')}}#10b981{{else}}#fbbf24{{/if}};">{{uses}}</b> / {{maxUses}}
+    </div>
+  </div>
+
+  {{#if isMaxed}}
+    <div style="text-align:center; padding: 20px; color: #10b981; font-weight:bold; border: 1px dashed #10b981; background: #ecfdf5; border-radius: 6px;">
+      ✨ Идеальное состояние ✨<br>
+      <span style="font-size:12px; color:#047857; font-weight:normal;">Набор полностью заряжен и расширен.</span>
+    </div>
+  {{else}}
+    <input type="hidden" id="missing-charges" value="{{missing}}">
+    <input type="hidden" id="cost-per-charge" value="{{costPerCharge}}">
+    <input type="hidden" id="app-mode" value="{{mode}}">
+
+    <div style="background: #1e293b; padding: 10px; border-radius: 6px; border: 1px solid #334155; margin-bottom:10px;">
+      <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px; text-align:center;">
+        {{#if (eq mode "upgrade")}}
+          <b style="color:#10b981;">УЛУЧШЕНИЕ (+1 макс. заряд = {{costPerCharge}} lb)</b><br>
+        {{else}}
+          <b>РЕМОНТ (1 заряд = {{costPerCharge}} lb)</b><br>
+        {{/if}}
+        <span style="color:#64748b; font-size: 10px;">(Укажите количество штук, которое хотите потратить)</span>
+      </div>
+      
+      <div style="max-height: 180px; overflow-y: auto; padding-right: 4px;">
+        {{#each loot}}
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 5px; border: 1px solid #334155; border-radius: 4px; margin-bottom: 3px;">
+            <div style="display: flex; gap: 6px; align-items: center;">
+              
+              <!-- НОВЫЙ ИНТЕРФЕЙС: Счетчик количества -->
+              <input type="number" class="mat-qty" data-id="{{this.id}}" data-unitw="{{this.unitW}}" min="0" max="{{this.qty}}" value="0" style="width: 40px; height: 26px; text-align: center; background: #1e293b; color: #f8fafc; border: 1px solid #475569; border-radius: 4px; font-size: 13px; font-weight: bold;">
+              <span style="font-size: 11px; color: #64748b; margin-right: 4px;">/ {{this.qty}}</span>
+              
+              <img src="{{this.img}}" style="width: 24px; height: 24px; border-radius: 4px; border: 1px solid #1e293b; object-fit: cover;">
+              <div style="display:flex; flex-direction:column;">
+                <span style="font-size: 12px; color:#f8fafc; font-weight:bold;">{{this.name}}</span>
+                <span style="font-size: 10px; color:#38bdf8;">{{this.cLabel}}</span>
+              </div>
+            </div>
+            <div style="font-size: 11px; color: #fbbf24; font-weight:bold; min-width: 45px; text-align:right;">
+              {{this.unitW}} lb/шт
+            </div>
+          </div>
+        {{else}}
+          <div style="text-align:center; padding: 15px; color: #64748b; font-size:12px; font-style: italic;">
+            В инвентаре нет компонентов.
+          </div>
+        {{/each}}
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:4px; background: #0f172a; padding: 10px; border-radius: 6px; border: 1px solid #334155; margin-bottom:10px;">
+      <div style="display:flex; justify-content:space-between; font-size:12px; color:#94a3b8;">
+        <span>Масса к списанию:</span>
+        <span id="cur-cost" style="color:#fbbf24; font-size: 13px; text-align:right; font-weight:bold;">0 lb</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:12px; color:#94a3b8;">
+        <span>{{#if (eq mode "upgrade")}}Добавит емкости:{{else}}Восстановит:{{/if}}</span>
+        <b id="restored-charges" style="color:#10b981; font-size: 14px;">0</b>
+      </div>
+    </div>
+
+    <button type="submit" disabled style="background: {{#if (eq mode 'upgrade')}}#0284c7{{else}}#10b981{{/if}}; color: #f8fafc; border: none; padding: 8px; border-radius: 4px; width: 100%; cursor: pointer; font-weight:bold; opacity: 0.5; transition: opacity 0.2s;">
+      {{#if (eq mode "upgrade")}}
+        <i class="fas fa-plus-circle"></i> Расширить набор
+      {{else}}
+        <i class="fas fa-wrench"></i> Пустить на ремонт
+      {{/if}}
+    </button>
+  {{/if}}
+</div>

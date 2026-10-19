@@ -1,0 +1,555 @@
+{
+    "custom_common_weapon": {
+        "name": "Оружие (Обычное)",
+        "category": "weapon",
+        "rarity": "common",
+        "reqTags": [
+            "nat_weapon",
+            "hard_cover"
+        ],
+        "reqType": "any",
+        "isCustom": true,
+        "desc": "Оружие с легким магическим свойством (например, светится в темноте)."
+    },
+    "custom_uncommon_weapon": {
+        "name": "Оружие (Необычное)",
+        "category": "weapon",
+        "rarity": "uncommon",
+        "reqTags": [
+            "nat_weapon",
+            "hard_cover"
+        ],
+        "reqType": "any",
+        "isCustom": true,
+        "desc": "Оружие +1 или клинок с необычным эффектом."
+    },
+    "custom_rare_weapon": {
+        "name": "Оружие (Редкое)",
+        "category": "weapon",
+        "rarity": "rare",
+        "reqTags": [
+            "nat_weapon",
+            "hard_cover",
+            "mystic"
+        ],
+        "reqType": "any",
+        "isCustom": true,
+        "desc": "Оружие +2 или клинок с мощным эффектом."
+    },
+    "custom_common_armor": {
+        "name": "Броня/Щит (Обычные)",
+        "category": "armor",
+        "rarity": "common",
+        "reqTags": [
+            "soft_cover",
+            "hard_cover"
+        ],
+        "reqType": "any",
+        "isCustom": true,
+        "desc": "Броня, которая не пачкается, или щит с гербом."
+    },
+    "custom_uncommon_armor": {
+        "name": "Броня/Щит (Необычные)",
+        "category": "armor",
+        "rarity": "uncommon",
+        "reqTags": [
+            "soft_cover",
+            "hard_cover"
+        ],
+        "reqType": "any",
+        "isCustom": true,
+        "desc": "Броня +1 или Щит +1."
+    },
+    "custom_rare_armor": {
+        "name": "Броня/Щит (Редкие)",
+        "category": "armor",
+        "rarity": "rare",
+        "reqTags": [
+            "hard_cover",
+            "mystic"
+        ],
+        "reqType": "any",
+        "isCustom": true,
+        "desc": "Броня +2 или экипировка со свойством сопротивления."
+    },
+    "custom_common_trinket": {
+        "name": "Экипировка (Обычная)",
+        "category": "trinket",
+        "rarity": "common",
+        "reqTags": [
+            "soft_cover",
+            "alchemy"
+        ],
+        "reqType": "any",
+        "isCustom": true,
+        "desc": "Мелкий магический сувенир: плащ, кольцо, амулет."
+    },
+    "custom_uncommon_trinket": {
+        "name": "Экипировка (Необычная)",
+        "category": "trinket",
+        "rarity": "uncommon",
+        "reqTags": [
+            "soft_cover",
+            "mystic",
+            "alchemy"
+        ],
+        "reqType": "any",
+        "isCustom": true,
+        "desc": "Полезная чудесная вещь."
+    },
+    "custom_rare_trinket": {
+        "name": "Экипировка (Редкая)",
+        "category": "trinket",
+        "rarity": "rare",
+        "reqTags": [
+            "mystic",
+            "alchemy"
+        ],
+        "reqType": "any",
+        "isCustom": true,
+        "desc": "Редкий чудесный предмет."
+    },
+    "custom_common_potion": {
+        "name": "Алхимия (Обычная)",
+        "category": "potion",
+        "rarity": "common",
+        "reqTags": [
+            "alchemy"
+        ],
+        "reqType": "any",
+        "isCustom": true,
+        "isConsumable": true,
+        "desc": "Простое зелье или мазь."
+    },
+    "custom_uncommon_potion": {
+        "name": "Алхимия (Необычная)",
+        "category": "potion",
+        "rarity": "uncommon",
+        "reqTags": [
+            "alchemy",
+            "mystic"
+        ],
+        "reqType": "any",
+        "isCustom": true,
+        "isConsumable": true,
+        "desc": "Мощное зелье, яд или бомба."
+    },
+    "custom_rare_potion": {
+        "name": "Алхимия (Редкая)",
+        "category": "potion",
+        "rarity": "rare",
+        "reqTags": [
+            "alchemy",
+            "mystic"
+        ],
+        "reqType": "any",
+        "isCustom": true,
+        "isConsumable": true,
+        "desc": "Легендарный эликсир или смертельный яд."
+    },
+    "potion_healing": {
+        "name": "Зелье лечения",
+        "category": "potion",
+        "rarity": "common",
+        "reqTags": [
+            "alchemy"
+        ],
+        "reqType": "any",
+        "isConsumable": true,
+        "desc": "Восстанавливает 2d4+2 ХП."
+    },
+    "potion_greater_healing": {
+        "name": "Зелье большого лечения",
+        "category": "potion",
+        "rarity": "uncommon",
+        "reqTags": [
+            "alchemy"
+        ],
+        "reqType": "fey",
+        "isConsumable": true,
+        "desc": "Восстанавливает 4d4+4 ХП."
+    },
+    "potion_water_breathing": {
+        "name": "Зелье подводного дыхания",
+        "category": "potion",
+        "rarity": "uncommon",
+        "reqTags": [
+            "alchemy"
+        ],
+        "reqType": "beast",
+        "isConsumable": true,
+        "desc": "Позволяет дышать под водой 1 час."
+    },
+    "potion_climbing": {
+        "name": "Зелье лазания",
+        "category": "potion",
+        "rarity": "common",
+        "reqTags": [
+            "alchemy",
+            "nat_weapon"
+        ],
+        "reqType": "beast",
+        "isConsumable": true,
+        "desc": "Дает скорость лазания на 1 час."
+    },
+    "potion_invisibility": {
+        "name": "Зелье невидимости",
+        "category": "potion",
+        "rarity": "uncommon",
+        "reqTags": [
+            "alchemy",
+            "mystic"
+        ],
+        "reqType": "aberration",
+        "isConsumable": true,
+        "desc": "Делает вас невидимым на 1 час."
+    },
+    "potion_resistance": {
+        "name": "Зелье сопротивления",
+        "category": "potion",
+        "rarity": "uncommon",
+        "reqTags": [
+            "alchemy",
+            "hard_cover"
+        ],
+        "reqType": "dragon",
+        "isConsumable": true,
+        "desc": "Дает сопротивление одному типу урона на 1 час."
+    },
+    "oil_of_slipperiness": {
+        "name": "Масло скольжения",
+        "category": "potion",
+        "rarity": "uncommon",
+        "reqTags": [
+            "alchemy"
+        ],
+        "reqType": "ooze",
+        "isConsumable": true,
+        "desc": "Эффект заклинания 'Свобода перемещения' на 8 часов."
+    },
+    "elixir_of_health": {
+        "name": "Эликсир здоровья",
+        "category": "potion",
+        "rarity": "rare",
+        "reqTags": [
+            "alchemy",
+            "mystic"
+        ],
+        "reqType": "plant",
+        "isConsumable": true,
+        "desc": "Снимает все болезни, слепоту, глухоту и паралич."
+    },
+    "potion_heroism": {
+        "name": "Зелье героизма",
+        "category": "potion",
+        "rarity": "rare",
+        "reqTags": [
+            "alchemy"
+        ],
+        "reqType": "giant",
+        "isConsumable": true,
+        "desc": "Дает 10 временных ХП и эффект заклинания 'Благословение'."
+    },
+    "weapon_flame_tongue": {
+        "name": "Язык пламени",
+        "category": "weapon",
+        "rarity": "rare",
+        "reqTags": [
+            "nat_weapon",
+            "hard_cover"
+        ],
+        "reqType": "dragon",
+        "desc": "Меч. При активации наносит +2d6 урона огнем."
+    },
+    "weapon_warning": {
+        "name": "Оружие предупреждения",
+        "category": "weapon",
+        "rarity": "uncommon",
+        "reqTags": [
+            "nat_weapon",
+            "mystic"
+        ],
+        "reqType": "aberration",
+        "desc": "Дает преимущество на Инициативу и иммунитет к захвату врасплох."
+    },
+    "weapon_javelin_lightning": {
+        "name": "Метательное копье молний",
+        "category": "weapon",
+        "rarity": "uncommon",
+        "reqTags": [
+            "nat_weapon",
+            "hard_cover"
+        ],
+        "reqType": "elemental",
+        "desc": "Раз в день превращается в линию молнии (4d6 урона)."
+    },
+    "weapon_mace_smiting": {
+        "name": "Булава сокрушения",
+        "category": "weapon",
+        "rarity": "rare",
+        "reqTags": [
+            "hard_cover"
+        ],
+        "reqType": "construct",
+        "desc": "Наносит дополнительный урон по конструктам."
+    },
+    "weapon_vicious": {
+        "name": "Порочное оружие",
+        "category": "weapon",
+        "rarity": "rare",
+        "reqTags": [
+            "nat_weapon"
+        ],
+        "reqType": "fiend",
+        "desc": "При выпадении 20 на кубе наносит +7 чистого урона."
+    },
+    "weapon_blood_spear": {
+        "name": "Кровавое копье",
+        "category": "weapon",
+        "rarity": "uncommon",
+        "reqTags": [
+            "nat_weapon",
+            "hard_cover"
+        ],
+        "reqType": "undead",
+        "desc": "При убийстве врага дарует временные ХП (2d6)."
+    },
+    "wand_magic_missiles": {
+        "name": "Жезл магических снарядов",
+        "category": "weapon",
+        "rarity": "uncommon",
+        "reqTags": [
+            "hard_cover",
+            "mystic"
+        ],
+        "reqType": "fey",
+        "desc": "Имеет 7 зарядов для каста 'Волшебной стрелы'."
+    },
+    "wand_web": {
+        "name": "Жезл паутины",
+        "category": "weapon",
+        "rarity": "uncommon",
+        "reqTags": [
+            "alchemy",
+            "hard_cover"
+        ],
+        "reqType": "monstrosity",
+        "desc": "Имеет 7 зарядов для каста заклинания 'Паутина'."
+    },
+    "armor_mithral": {
+        "name": "Мифриловая броня",
+        "category": "armor",
+        "rarity": "uncommon",
+        "reqTags": [
+            "hard_cover",
+            "soft_cover"
+        ],
+        "reqType": "construct",
+        "desc": "Снимает помеху на Скрытность. Не требует минимальной Силы."
+    },
+    "armor_adamantine": {
+        "name": "Адамантиновая броня",
+        "category": "armor",
+        "rarity": "uncommon",
+        "reqTags": [
+            "hard_cover"
+        ],
+        "reqType": "elemental",
+        "desc": "Превращает любые критические попадания по вам в обычные."
+    },
+    "armor_resistance": {
+        "name": "Доспех сопротивления",
+        "category": "armor",
+        "rarity": "rare",
+        "reqTags": [
+            "hard_cover",
+            "soft_cover"
+        ],
+        "reqType": "elemental",
+        "desc": "Дает сопротивление одному типу урона (зависит от материала)."
+    },
+    "shield_sentinel": {
+        "name": "Щит стража",
+        "category": "armor",
+        "rarity": "uncommon",
+        "reqTags": [
+            "hard_cover",
+            "mystic"
+        ],
+        "reqType": "monstrosity",
+        "desc": "Дает преимущество на Инициативу и проверки Внимания."
+    },
+    "shield_arrow_catching": {
+        "name": "Щит ловли стрел",
+        "category": "armor",
+        "rarity": "rare",
+        "reqTags": [
+            "hard_cover",
+            "mystic"
+        ],
+        "reqType": "fey",
+        "desc": "Дает +2 AC против дальних атак. Притягивает стрелы."
+    },
+    "armor_mariner": {
+        "name": "Броня моряка",
+        "category": "armor",
+        "rarity": "uncommon",
+        "reqTags": [
+            "hard_cover",
+            "soft_cover"
+        ],
+        "reqType": "beast",
+        "desc": "Дает скорость плавания, равную скорости ходьбы."
+    },
+    "bag_of_holding": {
+        "name": "Сумка хранения",
+        "category": "trinket",
+        "rarity": "uncommon",
+        "reqTags": [
+            "soft_cover",
+            "alchemy"
+        ],
+        "reqType": "aberration",
+        "desc": "Вмещает до 500 фунтов, но весит всегда 15 фунтов."
+    },
+    "cloak_protection": {
+        "name": "Плащ защиты",
+        "category": "trinket",
+        "rarity": "uncommon",
+        "reqTags": [
+            "soft_cover"
+        ],
+        "reqType": "fiend",
+        "desc": "Дает +1 к Классу Доспеха (AC) и всем спасброскам."
+    },
+    "ring_protection": {
+        "name": "Кольцо защиты",
+        "category": "trinket",
+        "rarity": "rare",
+        "reqTags": [
+            "hard_cover",
+            "mystic"
+        ],
+        "reqType": "any",
+        "desc": "Дает +1 к Классу Доспеха (AC) и всем спасброскам."
+    },
+    "cloak_elvenkind": {
+        "name": "Плащ эльфийского рода",
+        "category": "trinket",
+        "rarity": "uncommon",
+        "reqTags": [
+            "soft_cover"
+        ],
+        "reqType": "plant",
+        "desc": "Дает преимущество на проверки Скрытности."
+    },
+    "boots_elvenkind": {
+        "name": "Сапоги эльфийского рода",
+        "category": "trinket",
+        "rarity": "uncommon",
+        "reqTags": [
+            "soft_cover",
+            "mystic"
+        ],
+        "reqType": "beast",
+        "desc": "Ваши шаги не издают звуков."
+    },
+    "gauntlets_ogre_power": {
+        "name": "Рукавицы силы огра",
+        "category": "trinket",
+        "rarity": "uncommon",
+        "reqTags": [
+            "hard_cover",
+            "soft_cover"
+        ],
+        "reqType": "giant",
+        "desc": "Устанавливают значение Силы равным 19."
+    },
+    "headband_intellect": {
+        "name": "Ободок интеллекта",
+        "category": "trinket",
+        "rarity": "uncommon",
+        "reqTags": [
+            "mystic"
+        ],
+        "reqType": "aberration",
+        "desc": "Устанавливают значение Интеллекта равным 19."
+    },
+    "amulet_health": {
+        "name": "Амулет здоровья",
+        "category": "trinket",
+        "rarity": "rare",
+        "reqTags": [
+            "mystic",
+            "alchemy"
+        ],
+        "reqType": "monstrosity",
+        "desc": "Устанавливают значение Телосложения равным 19."
+    },
+    "winged_boots": {
+        "name": "Крылатые сапоги",
+        "category": "trinket",
+        "rarity": "uncommon",
+        "reqTags": [
+            "soft_cover",
+            "mystic"
+        ],
+        "reqType": "celestial",
+        "desc": "Дают скорость полета, равную скорости ходьбы."
+    },
+    "pearl_of_power": {
+        "name": "Жемчужина силы",
+        "category": "trinket",
+        "rarity": "uncommon",
+        "reqTags": [
+            "mystic",
+            "hard_cover"
+        ],
+        "reqType": "elemental",
+        "desc": "Раз в день восстанавливает ячейку заклинаний до 3-го уровня."
+    },
+    "cloak_displacement": {
+        "name": "Плащ ускользания",
+        "category": "trinket",
+        "rarity": "rare",
+        "reqTags": [
+            "soft_cover",
+            "mystic"
+        ],
+        "reqType": "monstrosity",
+        "desc": "Накладывает помеху на все броски атаки по вам."
+    },
+    "boots_striding": {
+        "name": "Сапоги прыжков",
+        "category": "trinket",
+        "rarity": "uncommon",
+        "reqTags": [
+            "soft_cover",
+            "nat_weapon"
+        ],
+        "reqType": "beast",
+        "desc": "Увеличивают дальность прыжков в 3 раза."
+    },
+    "goggles_night": {
+        "name": "Очки ночи",
+        "category": "trinket",
+        "rarity": "uncommon",
+        "reqTags": [
+            "mystic",
+            "hard_cover"
+        ],
+        "reqType": "undead",
+        "desc": "Даруют темное зрение на 60 футов."
+    },
+    "ring_evasion": {
+        "name": "Кольцо уклонения",
+        "category": "trinket",
+        "rarity": "rare",
+        "reqTags": [
+            "mystic",
+            "hard_cover"
+        ],
+        "reqType": "fey",
+        "desc": "Позволяет автоматически преуспеть в спасброске Ловкости."
+    }
+}

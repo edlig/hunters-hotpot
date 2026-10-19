@@ -1,0 +1,47 @@
+<div class="hh-app-content" data-max-helpers="{{ctx.sizeData.h}}">
+  <div class="hh-card" style="display: flex; gap: 12px; align-items: center; background: #1e293b; padding: 12px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 12px;">
+    <img src="{{targetImg}}" style="width:48px; height:48px; border-radius:6px; object-fit:cover;">
+    <div>
+      <h3 style="margin:0; color:#38bdf8;">{{ctx.mName}}</h3>
+      <p style="margin:0; font-size:12px; color:#94a3b8;">{{ctx.sizeData.label}} • CR {{ctx.cr}}</p>
+    </div>
+  </div>
+
+  <div class="hh-card" style="background: #1e293b; padding: 12px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 12px;">
+    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:10px; color:#f8fafc;">
+      <span>Навык: <b style="color:#a78bfa;">{{ctx.skillInfo.name}}</b></span>
+      <span>Расход набора: <b style="color:#fbbf24;">{{ctx.sizeData.charge}} зар.</b></span>
+    </div>
+    <label style="font-size:11px; color:#94a3b8; font-weight:bold;">Способ разделки</label>
+    <select name="stat" class="hh-sel" style="width: 100%; background: #0f172a; color: #f8fafc; padding: 4px 8px; border-radius: 4px; border: 1px solid #475569; height: 32px; margin-top: 4px;">
+      {{#each statOptions}}
+        <option value="{{this.value}}">{{this.label}}</option>
+      {{/each}}
+    </select>
+  </div>
+
+  <div class="hh-card" style="background: #1e293b; padding: 12px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 12px;">
+    <div style="display:flex; justify-content:space-between; margin-bottom:8px; color:#f8fafc;">
+      <span style="font-size:11px; font-weight:bold;">Помощники</span>
+      <span style="font-size:11px;">Выбрано: <b id="hh-h-count">0</b> / {{ctx.sizeData.h}}</span>
+    </div>
+    {{#if hasHelpers}}
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px;">
+        {{#each helpers}}
+          <div class="hh-helper-card" data-action="toggleHelper" data-bonus="{{this.bonus}}" data-name="{{this.name}}" style="background: #0f172a; border: 1px solid #334155; border-radius: 6px; padding: 6px; text-align: center; cursor: pointer; position: relative;">
+            <img src="{{this.img}}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+            <div style="font-size: 10px; color:#f8fafc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{this.name}}</div>
+            <div style="font-size: 10px; color: #10b981; font-weight: bold;">+{{this.bonus}} PB</div>
+            {{#if this.hasProf}}<span style="position:absolute; top:-4px; right:-4px;">⭐</span>{{/if}}
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <div style="text-align: center; color: gray; padding: 10px;">Нет союзников поблизости</div>
+    {{/if}}
+  </div>
+
+  <button type="submit" style="background: #0f172a; color: #f8fafc; border: 1px solid #475569; padding: 8px; border-radius: 4px; width: 100%; cursor: pointer;">
+    <i class="fas fa-dice-d20"></i> Бросить проверку
+  </button>
+</div>

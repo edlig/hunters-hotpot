@@ -1,0 +1,47 @@
+{
+  "id": "hunters-hotpot",
+  "title": "Hunter's Hotpot: Кухня и Сбор",
+  "description": "Модуль для сбора компонентов из монстров и полевой кулинарии. Оптимизировано для dnd5e 2024.",
+  "version": "0.1.0",
+  "authors": [
+    {
+      "name": "Ed"
+    }
+  ],
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "5.3.3"
+        }
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/main.js"
+  ],
+  "styles": [
+    "styles/hotpot.css"
+  ],
+  "packs": [
+    {
+      "name": "hotpot-macros",
+      "label": "Hotpot Macros",
+      "path": "packs/hotpot-macros",
+      "type": "Macro",
+      "system": "dnd5e",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      }
+    }
+  ],
+  "manifest": "https://raw.githubusercontent.com/edlig/hunters-hotpot/main/module.json",
+  "download": "https://github.com/edlig/hunters-hotpot/releases/download/v1.0.0/hunters-hotpot.zip"
+}

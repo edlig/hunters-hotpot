@@ -1,0 +1,84 @@
+<div style="padding: 8px 10px; display: flex; flex-direction: column; gap: 8px; height: 100%; color: var(--color-text-primary, inherit);">
+    
+    <!-- Поиск и Фильтры -->
+    <details style="background: rgba(0,0,0,0.02); border: 1px solid var(--color-border-light-tertiary, #cbd5e1); border-radius: 4px; padding: 4px 8px;">
+        <summary style="font-size: 12px; font-weight: bold; cursor: pointer; opacity: 0.8; padding: 2px 0;">Поиск и фильтры чертежей</summary>
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px; padding-bottom: 4px;">
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <i class="fas fa-search" style="opacity: 0.6; margin-left: 4px;"></i>
+                <input type="search" id="recipe-search" placeholder="Поиск чертежа по названию..." style="flex: 1; height: 24px; border: 1px solid var(--color-border-light-tertiary, #cbd5e1); border-radius: 4px; padding: 0 8px; font-size: 12px; background: var(--color-bg-body, #292929); color: var(--color-text-primary, #e0e0e0);">
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <select id="rarity-filter" style="flex: 1; font-size: 12px; border: 1px solid var(--color-border-light-tertiary, #cbd5e1); border-radius: 4px; background: var(--color-bg-body, #292929); color: var(--color-text-primary, #e0e0e0); height: 24px;"></select>
+                <select id="cat-filter" style="flex: 1; font-size: 12px; border: 1px solid var(--color-border-light-tertiary, #cbd5e1); border-radius: 4px; background: var(--color-bg-body, #292929); color: var(--color-text-primary, #e0e0e0); height: 24px;"></select>
+            </div>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; opacity: 0.8;">
+                <input type="checkbox" id="available-filter" style="width: 12px; height: 12px;">
+                Показать только доступные
+            </label>
+        </div>
+    </details>
+
+    <!-- Выбор Рецепта -->
+    <div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <label style="font-size: 12px; font-weight: bold; opacity: 0.8;">Выбранный чертеж:</label>
+            <div id="batch-qty-container" style="display: none; align-items: center; gap: 6px;">
+                <span style="font-size: 11px; font-weight: bold; opacity: 0.8;">Партия (шт):</span>
+                <input type="number" id="batch-qty-inp" min="1" value="1" style="width: 40px; height: 20px; text-align: center; border: 1px solid var(--color-border-light-tertiary, #cbd5e1); border-radius: 4px; font-size: 12px; font-weight: bold; background: var(--color-bg-body, #292929); color: var(--color-text-primary, #e0e0e0);">
+            </div>
+        </div>
+        <select id="recipe-sel" name="recipeId" style="width: 100%; font-weight: bold; font-size: 13px; margin-top: 4px; border: 1px solid var(--color-border-light-tertiary, #cbd5e1); border-radius: 4px; background: var(--color-bg-body, #292929); color: var(--color-text-primary, #e0e0e0); height: 26px;"></select>
+        
+        <input type="text" id="custom-name-inp" placeholder="Введите название создаваемого предмета..." style="display: none; width: 100%; margin-top: 6px; font-size: 13px; border: 1px dashed #10b981; padding: 4px 8px; border-radius: 4px; background: var(--color-bg-body, #292929); color: var(--color-text-primary, #e0e0e0);">
+        <div id="desc-display" style="font-size: 11px; opacity: 0.8; margin-top: 4px; font-style: italic;"></div>
+        
+        <!-- Требования -->
+        <div id="req-display" style="font-size: 11px; margin-top: 6px; padding: 6px 8px; background: rgba(16, 185, 129, 0.05); border: 1px solid var(--color-border-light-tertiary, #cbd5e1); border-left: 3px solid #10b981; border-radius: 4px; display: none; color: inherit;"></div>
+    </div>
+
+    <!-- Эссенции -->
+    <div style="background: rgba(0,0,0,0.03); border: 1px solid var(--color-border-light-tertiary, #cbd5e1); border-radius: 4px; padding: 6px 8px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <label style="font-size: 12px; font-weight: bold; white-space: nowrap;">Магическая Эссенция:</label>
+            <select id="essence-sel" name="essId" style="flex: 1; border: 1px solid var(--color-border-light-tertiary, #cbd5e1); border-radius: 4px; background: var(--color-bg-body, #292929); color: var(--color-text-primary, #e0e0e0); font-size: 12px; height: 24px;"></select>
+        </div>
+        <div id="essence-warning" style="display: none; color: #ef4444; font-size: 11px; font-weight: bold; margin-top: 4px; text-align: right;"></div>
+    </div>
+
+    <!-- Сырье -->
+    <div style="flex: 1; display: flex; flex-direction: column; min-height: 180px;">
+        <div style="border-bottom: 1px solid var(--color-border-light-tertiary, #cbd5e1); margin: 0 0 6px 0; padding-bottom: 4px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; font-weight: bold; opacity: 0.9;">Сырье для крафта</span>
+            <span style="font-size: 12px; font-weight: bold; opacity: 0.9;">
+                <span id="cur-cost">0</span> / <span id="target-cost">0</span> зм.
+            </span>
+        </div>
+        
+        <div id="loot-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--color-border-light-tertiary, #cbd5e1); border-radius: 4px; padding: 4px; background: rgba(0,0,0,0.05);">
+            {{#each loot}}
+            <div class="loot-row" data-ctype="{{this.cType}}" data-stype="{{this.sType}}" style="display: flex; align-items: center; gap: 8px; padding: 4px; border: 1px solid var(--color-border-light-tertiary, #cbd5e1); border-radius: 4px;">
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <input type="number" class="mat-qty" data-id="{{this.id}}" data-unitp="{{this.unitP}}" min="0" max="{{this.qty}}" value="0" style="width: 40px; height: 24px; text-align: center; border: 1px solid var(--color-border-light-tertiary, #cbd5e1); border-radius: 4px; font-size: 12px; font-weight: bold; background: var(--color-bg-body, #292929); color: var(--color-text-primary, #e0e0e0);">
+                    <span style="font-size: 11px; opacity: 0.8; width: 20px;">/ {{this.qty}}</span>
+                </div>
+                <img src="{{this.img}}" width="26" height="26" style="border-radius: 4px; object-fit: cover;">
+                <div style="flex: 1; line-height: 1.2;">
+                    <div style="font-size: 12px; font-weight: bold;">{{this.name}}</div>
+                    <div style="font-size: 10px; opacity: 0.8; display: flex; justify-content: space-between;">
+                        <span>{{this.cLabel}}</span>
+                        <span style="font-weight: bold; color: #d97706;">{{this.unitP}} зм/шт</span>
+                    </div>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+    
+    <div style="display: flex; flex-direction: column; gap: 4px; padding-top: 2px;">
+        <div id="missing-tags-warning" style="display: none; color: #ef4444; font-size: 11px; font-weight: bold; text-align: center;"></div>
+        <button type="submit" id="submit-btn" style="width: 100%; background: #10b981; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 13px; font-weight: bold;">
+            <i class="fas fa-hammer"></i> Начать проект
+        </button>
+    </div>
+</div>
