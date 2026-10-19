@@ -86,18 +86,18 @@ export class HarvestService {
         const cookLabel = cookLabels[i.base] || i.base;
 
         const descHtml = `
-          <div style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px; border-radius: 4px; font-family: sans-serif;">
-            <p style="margin: 0 0 6px;">Трофей из <b>${ctx.mName}</b>.</p>
-            <div style="display:flex; flex-direction:column; gap:4px; font-size:12px;">
-              <div style="background: #e0f2fe; color: #0369a1; padding: 4px; border-radius: 4px; border: 1px solid #bae6fd;">
-                <b>${cTag?.icon || "🧩"} Ремесло:</b> ${cTag?.label || "Сырье"}
-              </div>
-              <div style="background: #fef08a; color: #854d0e; padding: 4px; border-radius: 4px; border: 1px solid #fde047;">
-                <b>🍲 Кулинария:</b> ${cookLabel}
-              </div>
+        <div style="background: var(--dnd5e-color-card-background, rgba(0,0,0,0.02)); border: 1px solid var(--color-border-light-tertiary, #cbd5e1); padding: 6px; border-radius: 4px; font-family: sans-serif; color: var(--color-text-primary, inherit);">
+          <p style="margin: 0 0 6px;">Трофей из <b>${ctx.mName}</b>.</p>
+          <div style="display:flex; flex-direction:column; gap:4px; font-size:12px;">
+            <div style="background: rgba(14, 165, 233, 0.1); color: inherit; padding: 4px 6px; border-radius: 4px; border: 1px solid rgba(14, 165, 233, 0.2); border-left: 3px solid #0ea5e9;">
+              <b>${cTag?.icon || "🧩"} Ремесло:</b> ${cTag?.label || "Сырье"}
+            </div>
+            <div style="background: rgba(245, 158, 11, 0.1); color: inherit; padding: 4px 6px; border-radius: 4px; border: 1px solid rgba(245, 158, 11, 0.2); border-left: 3px solid #f59e0b;">
+              <b>🍲 Кулинария:</b> ${cookLabel}
             </div>
           </div>
-        `;
+        </div>
+      `;
 
         itemsToCreate.push({
           name: finalName, type: "loot", img: i.img,
