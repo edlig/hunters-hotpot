@@ -32,51 +32,70 @@ export const HOTPOT_CONFIG = {
         "legendary": { dice: "1d10", label: "Мифическая Эссенция" },
         "artifact": { dice: "1d12", label: "Божественная Эссенция" }
     },
-
-    recipes: {
-        tier1: {
-            "meat_steak": {
-                name: "Сочный стейк",
-                reqBase: "meat",
-                img: "icons/consumables/food/steak-cooked-grilled-brown.webp",
-                desc: "Ваши атаки насыщаются уроном стихии монстра. Сила эффекта зависит от эссенции.",
-                effectKey: "bonusDamage",
-                aeMode: "system.bonuses.All-Damage" // В эффект передадим: "[dice][стихия]" (например "1d4[fire]")
-            },
-            "fluid_sausage": {
-                name: "Кровяная колбаса",
-                reqBase: "fluid",
-                img: "icons/consumables/food/sausage-bratwurst-mustard-red-yellow.webp",
-                desc: "Кровь чудовища расширяет ваши физические пределы. Увеличивает максимум ХП на значение эссенции.",
-                effectKey: "maxHp",
-                aeMode: "system.attributes.hp.tempmax" // В эффект передадим: "[dice]"
-            },
-            "bone_broth": {
-                name: "Костный бульон",
-                reqBase: "bone",
-                img: "icons/consumables/food/bowl-stew-brown.webp",
-                desc: "Костяк зверя закаляет ваше тело. Вы получаете плоское снижение входящего урона от стихии монстра.",
-                effectKey: "drElement",
-                aeMode: "system.traits.dm.amount" // В эффект передадим стихию и: "-[dice]"
-            },
-            "organ_pie": {
-                name: "Ливерный пирог",
-                reqBase: "organ",
-                img: "icons/consumables/food/plate-pasta-noodles-white-red.webp",
-                desc: "Первобытные инстинкты обостряют ваши навыки. Вы добавляете кость эссенции ко всем проверкам характеристик и навыков.",
-                effectKey: "bonusChecks",
-                aeMode: "system.bonuses.abilities.check" // Как заклинание Наставление (Guidance)
-            },
-            "mystic_soup": {
-                name: "Мерцающая похлебка",
-                reqBase: "mystic",
-                img: "icons/commodities/materials/bowl-liquid-white.webp",
-                desc: "Чужеродная магия защищает ваш разум и тело. Вы добавляете кость эссенции ко всем спасброскам.",
-                effectKey: "bonusSaves",
-                aeMode: "system.bonuses.abilities.save" // Как заклинание Благословение (Bless)
+    cooking: {
+        recipes: {
+            tier1: {
+                "meat_steak": {
+                    name: "Сочный стейк",
+                    reqBase: "meat",
+                    img: "icons/consumables/food/steak-cooked-grilled-brown.webp",
+                    desc: "Ваши атаки насыщаются уроном стихии монстра. Сила эффекта зависит от эссенции.",
+                    effectKey: "bonusDamage",
+                },
+                "fluid_sausage": {
+                    name: "Кровяная колбаса",
+                    reqBase: "fluid",
+                    img: "icons/consumables/food/sausage-bratwurst-mustard-red-yellow.webp",
+                    desc: "Кровь чудовища расширяет ваши физические пределы. Увеличивает максимум ХП на значение эссенции.",
+                    effectKey: "maxHp",
+                },
+                "bone_broth": {
+                    name: "Костный бульон",
+                    reqBase: "bone",
+                    img: "icons/consumables/food/bowl-stew-brown.webp",
+                    desc: "Костяк зверя закаляет ваше тело. Вы получаете плоское снижение входящего урона от стихии монстра.",
+                    effectKey: "drElement",
+                },
+                "organ_pie": {
+                    name: "Ливерный пирог",
+                    reqBase: "organ",
+                    img: "icons/consumables/food/plate-pasta-noodles-white-red.webp",
+                    desc: "Первобытные инстинкты обостряют ваши навыки. Вы добавляете кость эссенции к проверкам навыков характерискики монстра.",
+                    effectKey: "bonusChecks",
+                },
+                "mystic_soup": {
+                    name: "Мерцающая похлебка",
+                    reqBase: "mystic",
+                    img: "icons/commodities/materials/bowl-liquid-white.webp",
+                    desc: "Чужеродная магия защищает ваш разум и тело. Вы добавляете кость эссенции к спасброскам характерискики монстра.",
+                    effectKey: "bonusSaves",
+                }
             }
-        }
+        },
+        quirks: {
+            positive: [
+                { name: "Железный желудок", desc: "Устойчивость урону ядом и преимущество в спасах от отравления.", eff: [{ key: "system.traits.dr.value", mode: 0, value: "poison" }, { key: "flags.midi-qol.advantage.ability.save.con", mode: 0, value: "1" }] },
+                { name: "Сладкое Дыхание", desc: "+1 к проверкам Харизмы против существ, чувствующих запах.", eff: [] },
+                { name: "Обучение Лингвиста", desc: "Вы понимаете язык съеденного существа.", eff: [] },
+                { name: "Медленный расход энергии", desc: "+1 к спасброскам на поддержание концентрации.", eff: [{ key: "system.bonuses.abilities.save", mode: 2, value: "1" }] },
+                { name: "Фантастическое бесстрашие", desc: "Вы невосприимчивы к состоянию испуга.", eff: [{ key: "system.traits.ci.value", mode: 0, value: "frightened" }] },
+                { name: "Крепкая хватка", desc: "Преимущество на проверки Силы. Вы считаетесь на 1 размер больше.", eff: [{ key: "flags.midi-qol.advantage.ability.check.str", mode: 0, value: "1" }, { key: "flags.dnd5e.powerfulBuild", mode: 0, value: "1" }] },
+                { name: "Спокойное пищеварение", desc: "Больше исцеления при трате костей хитов на отдыхе.", eff: [] },
+                { name: "Фаст Фуд", desc: "Ваша скорость увеличивается на 5 футов.", eff: [{ key: "system.attributes.movement.walk", mode: 2, value: "+5" }] }
+            ],
+            negative: [
+                { name: "Месть Ротворта", desc: "Вы отравлены и не можете отдыхать.", eff: [] },
+                { name: "Тошнотворный Кошмар", desc: "-1 к проверкам Инт, Муд, Хар и Инициативе.", eff: [{ key: "system.attributes.init.bonus", mode: 2, value: "-1" }] },
+                { name: "Косноязычие", desc: "Вы можете говорить только на языке съеденного существа.", eff: [] },
+                { name: "Напыщенность", desc: "Зловонные газы. -1 к проверкам Скрытности и Харизмы.", eff: [{ key: "system.skills.ste.bonuses.check", mode: 2, value: "-1" }] },
+                { name: "Бомба Борборугмуса", desc: "-1 к концентрации.", eff: [] },
+                { name: "Высокогликемический", desc: "-1 к проверкам и спасам Ловкости.", eff: [] },
+                { name: "Аллергическая реакция", desc: "Сыпь. Спасбросок Тел. СЛ 10 каждый ход.", eff: [] },
+                { name: "Переедание", desc: "Чувство вздутия. Скорость снижена на 5 футов.", eff: [{ key: "system.attributes.movement.walk", mode: 2, value: "-5" }] }
+            ]
+        },
     },
+
 
     crafting: {
         rarity: {
@@ -111,28 +130,6 @@ export const HOTPOT_CONFIG = {
         }
     },
 
-    quirks: {
-        positive: [
-            { name: "Железный желудок", desc: "Устойчивость урону ядом и преимущество в спасах от отравления.", eff: [{ key: "system.traits.dr.value", mode: 0, value: "poison" }, { key: "flags.midi-qol.advantage.ability.save.con", mode: 0, value: "1" }] },
-            { name: "Сладкое Дыхание", desc: "+1 к проверкам Харизмы против существ, чувствующих запах.", eff: [] },
-            { name: "Обучение Лингвиста", desc: "Вы понимаете язык съеденного существа.", eff: [] },
-            { name: "Медленный расход энергии", desc: "+1 к спасброскам на поддержание концентрации.", eff: [{ key: "system.bonuses.abilities.save", mode: 2, value: "1" }] },
-            { name: "Фантастическое бесстрашие", desc: "Вы невосприимчивы к состоянию испуга.", eff: [{ key: "system.traits.ci.value", mode: 0, value: "frightened" }] },
-            { name: "Крепкая хватка", desc: "Преимущество на проверки Силы. Вы считаетесь на 1 размер больше.", eff: [{ key: "flags.midi-qol.advantage.ability.check.str", mode: 0, value: "1" }, { key: "flags.dnd5e.powerfulBuild", mode: 0, value: "1" }] },
-            { name: "Спокойное пищеварение", desc: "Больше исцеления при трате костей хитов на отдыхе.", eff: [] },
-            { name: "Фаст Фуд", desc: "Ваша скорость увеличивается на 5 футов.", eff: [{ key: "system.attributes.movement.walk", mode: 2, value: "+5" }] }
-        ],
-        negative: [
-            { name: "Месть Ротворта", desc: "Вы отравлены и не можете отдыхать.", eff: [] },
-            { name: "Тошнотворный Кошмар", desc: "-1 к проверкам Инт, Муд, Хар и Инициативе.", eff: [{ key: "system.attributes.init.bonus", mode: 2, value: "-1" }] },
-            { name: "Косноязычие", desc: "Вы можете говорить только на языке съеденного существа.", eff: [] },
-            { name: "Напыщенность", desc: "Зловонные газы. -1 к проверкам Скрытности и Харизмы.", eff: [{ key: "system.skills.ste.bonuses.check", mode: 2, value: "-1" }] },
-            { name: "Бомба Борборугмуса", desc: "-1 к концентрации.", eff: [] },
-            { name: "Высокогликемический", desc: "-1 к проверкам и спасам Ловкости.", eff: [] },
-            { name: "Аллергическая реакция", desc: "Сыпь. Спасбросок Тел. СЛ 10 каждый ход.", eff: [] },
-            { name: "Переедание", desc: "Чувство вздутия. Скорость снижена на 5 футов.", eff: [{ key: "system.attributes.movement.walk", mode: 2, value: "-5" }] }
-        ]
-    },
 
     kit: {
         maxChargesLimit: 100, // Абсолютный предел зарядов
@@ -148,7 +145,7 @@ export const HOTPOT_CONFIG = {
         const t = (type || "").toLowerCase();
         if (["aberration", "elemental", "fey", "construct"].includes(t)) return "arc";
         if (["celestial", "fiend"].includes(t)) return "rel";
-        if (["ooze", "plant"].includes(t)) return"nat";
+        if (["ooze", "plant"].includes(t)) return "nat";
         if (["giant", "humanoid", "undead"].includes(t)) return "med";
         return "sur";
     },

@@ -4,171 +4,189 @@ export class CookService {
   /**
    * Списание ингредиентов из инвентаря (С учетом Quantity)
    */
-  static async consumeIngredients(actor, selectedItems, requiredWeight, essId) {
+  static async consumeIngredients(cookActor, selectedItems, requiredWeight, essId) {
+    let weightToConsume = requiredWeight;
     let deletes = [];
     let updates = [];
 
-    if (essId && essId !== "none") deletes.push(essId);
-
-    let targetW = requiredWeight;
-
-    for (let s of selectedItems) {
-      if (targetW <= 0) break;
-      const item = actor.items.get(s.id);
+    // selectedItems — это массив из CookApp [{id, w, u, type}]
+    for (let sel of selectedItems) {
+      if (weightToConsume <= 0) break;
+      const item = cookActor.items.get(sel.id);
       if (!item) continue;
 
-      const currentQty = item.system.quantity || 1;
-      const unitWeight = item.system.weight?.value || 0.1;
+      // Получаем вес ОДНОЙ штуки и количество в стаке
+      const w = Number(item.system.weight?.value || 0);
+      const q = Number(item.system.quantity || 1);
 
-      if (s.u) {
-        // Неделимый предмет (Орган): Жрет весь стак целиком и дает свой полный вес
-        targetW -= (unitWeight * currentQty);
-        deletes.push(s.id);
+      if (sel.u) {
+        // Уникальный орган или неделимый кусок — кидаем в котел целиком
+        deletes.push(item.id);
+        weightToConsume -= (w * q);
       } else {
-        // Делимый предмет (Мясо): Откусываем от стака нужное количество штук
-        let unitsNeeded = Math.ceil(targetW / unitWeight);
-        let unitsToConsume = Math.min(unitsNeeded, currentQty);
+        // Обычное сырье (мясо, кости). Считаем, сколько штук нужно откусить
+        const itemsToConsume = Math.ceil(weightToConsume / w);
 
-        targetW -= (unitsToConsume * unitWeight);
-
-        if (unitsToConsume >= currentQty) {
-          deletes.push(s.id);
+        if (itemsToConsume >= q) {
+          deletes.push(item.id); // Забираем стак целиком
         } else {
-          updates.push({ _id: s.id, "system.quantity": currentQty - unitsToConsume });
+          updates.push({ _id: item.id, "system.quantity": q - itemsToConsume }); // Забираем часть
         }
+        weightToConsume -= (itemsToConsume * w);
       }
     }
 
-    if (deletes.length > 0) await actor.deleteEmbeddedDocuments("Item", deletes);
-    if (updates.length > 0) await actor.updateEmbeddedDocuments("Item", updates);
+    if (essId && essId !== "none") deletes.push(essId);
+    if (updates.length > 0) await cookActor.updateEmbeddedDocuments("Item", updates);
+    if (deletes.length > 0) await cookActor.deleteEmbeddedDocuments("Item", deletes);
   }
 
-  /**
-   * Генерация данных эффекта (ActiveEffect v3+)
-   */
-  static generateEffectData(outcome, baseType, essenceData, dmgType, dominantType, specificStat, cookActor) {
+  static generateEffectData(outcome, recipe, essData, dmgType, dominantType, specificStat, cookActor) {
     if (outcome === "ruined") {
       return {
-        _id: foundry.utils.randomID(),
-        name: "Испорченное варево (Отравление)",
-        icon: "icons/consumables/meat/steak-spoiled-yellow.webp",
+        name: "🤢 Испорченная жижа (Отравление)",
         img: "icons/consumables/meat/steak-spoiled-yellow.webp",
-        changes: [{ key: "macro.CE", mode: 0, value: "Poisoned" }],
-        duration: { seconds: 3600 },
-        origin: cookActor.uuid,
-        transfer: false
+        changes: [{ key: "system.traits.ci.value", mode: 2, value: "poisoned" }],
+        duration: { seconds: 3600 } // 1 час
       };
     }
 
-    const recipe = HOTPOT_CONFIG.recipes.tier1[baseType] || HOTPOT_CONFIG.recipes.tier1["meat_steak"];
-    const s = essenceData.dice || "1";
-    let changes = [];
+    // Никакого поиска и костылей. Берем переданный объект рецепта.
+    const dice = essData ? essData.dice : "1";
+    const changes = [];
+    let nameSuffix = ""; // Суффикс для названия
 
     switch (recipe.effectKey) {
-      case "bonusDamage":
-        changes.push({ key: "system.bonuses.mwak.damage", mode: 2, value: `+ ${s}[${dmgType}]` });
-        changes.push({ key: "system.bonuses.rwak.damage", mode: 2, value: `+ ${s}[${dmgType}]` });
-        changes.push({ key: "system.bonuses.msak.damage", mode: 2, value: `+ ${s}[${dmgType}]` });
-        changes.push({ key: "system.bonuses.rsak.damage", mode: 2, value: `+ ${s}[${dmgType}]` });
-        break;
-
-      case "maxHp":
-        changes.push({ key: "system.attributes.hp.tempmax", mode: 2, value: s === "1" ? "5" : `5 * ${s}` });
-        break;
-
-      case "drElement":
-        changes.push({ key: `system.traits.dm.amount.${dmgType}`, mode: 2, value: `- ${s}` });
-        break;
-
       case "bonusChecks":
-        changes.push({ key: "system.bonuses.abilities.check", mode: 2, value: `+ ${s}` });
+        changes.push({ key: `system.abilities.${specificStat}.bonuses.check`, mode: 2, value: `+${dice}` });
+        nameSuffix = ` (${CONFIG.DND5E.abilities[specificStat]?.label || specificStat})`;
         break;
-
       case "bonusSaves":
-        changes.push({ key: "system.bonuses.abilities.save", mode: 2, value: `+ ${s}` });
+        changes.push({ key: `system.abilities.${specificStat}.bonuses.save`, mode: 2, value: `+${dice}` });
+        nameSuffix = ` (${CONFIG.DND5E.abilities[specificStat]?.label || specificStat})`;
         break;
-
-      default:
-        changes.push({ key: "system.bonuses.mwak.damage", mode: 2, value: `${s}[${dmgType}]` });
+      case "bonusDamage":
+        changes.push({ key: "system.rolls.damage.all.bonus", mode: 2, value: `+${dice}[${dmgType}]` });
+        nameSuffix = ` (${CONFIG.DND5E.damageTypes[dmgType]?.label || dmgType})`;
+        break;
+      case "drElement":
+        changes.push({ key: `flags.midi-qol.DR.${dmgType}`, mode: 2, value: `-${dice}` });
+        nameSuffix = ` (${CONFIG.DND5E.damageTypes[dmgType]?.label || dmgType})`;
+        break;
+      case "maxHp":
+        changes.push({ key: "system.attributes.hp.bonuses.overall", mode: 2, value: `${dice}` });
+        nameSuffix = "";
+        break;
     }
 
     return {
-      _id: foundry.utils.randomID(),
-      name: `Сытость: ${recipe.name} (${CONFIG.DND5E.damageTypes[dmgType]?.label || dmgType})`, icon: recipe.img, img: recipe.img,
-      changes,
-      duration: { seconds: 28800 },
-      origin: cookActor.uuid,
-      transfer: false
+      name: `Сытость: ${recipe.name}${nameSuffix}`,
+      img: recipe.img,
+      description: recipe.desc,
+      changes: changes,
+      duration: { seconds: 28800 } // 8 часов
     };
   }
 
-  /**
-   * Генерация эффекта Причуды
-   */
   static generateQuirkEffect(quirk, outcome, cookActor) {
     if (!quirk || !quirk.eff || quirk.eff.length === 0) return null;
-    const qIcon = outcome === "positive" ? "icons/magic/light/explosion-star-glow-yellow.webp" : "icons/magic/death/skull-poison-green.webp";
+
+    const changes = quirk.eff.map(e => {
+      let mode = e.mode;
+
+      if (mode === 0 && e.key.includes("system.traits")) mode = 2;
+
+      // Если мы включаем флаг Midi-QOL (advantage), нужен OVERRIDE (5)
+      if (mode === 0 && e.key.includes("flags.midi-qol")) mode = 5;
+
+      return {
+        key: e.key,
+        mode: mode,
+        value: e.value
+      };
+    });
+
     return {
-      _id: foundry.utils.randomID(),
       name: `Причуда: ${quirk.name}`,
-      icon: qIcon, img: qIcon,
-      changes: quirk.eff,
-      duration: { seconds: 28800 },
-      origin: cookActor.uuid,
-      transfer: false
+      img: outcome === "positive" ? "icons/magic/light/explosion-star-glow-blue-purple.webp" : "icons/skills/toxins/poison-bottle-corked-fire-green.webp",
+      changes: changes,
+      duration: { seconds: 28800 }, // 8 часов
+      flags: { "hunters-hotpot": { isQuirk: true } }
     };
   }
 
   /**
    * Наложение эффектов на список акторов
    */
-  static async applyEffectsToActors(actorIds, foodEffect, quirkEffect) {
+static async applyEffectsToActors(actorIds, foodEffect, quirkEffect) {
+    const effectsToCreate = [foodEffect, quirkEffect].filter(e => e !== null && e !== undefined);
+    if (effectsToCreate.length === 0) return;
+
     for (let id of actorIds) {
-      const a = game.actors.get(id);
-      if (a) {
-        let effects = [foundry.utils.deepClone(foodEffect)];
-        if (quirkEffect) effects.push(foundry.utils.deepClone(quirkEffect));
-        await a.createEmbeddedDocuments("ActiveEffect", effects);
+      const actor = game.actors.get(id);
+      if (!actor) continue;
+
+      // Удаляем старые баффы перед раздачей новых порций
+      const toDelete = actor.effects.filter(e => {
+        const eName = e.name || "";
+        const isF = e.getFlag("hunters-hotpot", "isFood") || eName.includes("Сытость") || eName.includes("Испорченная жижа");
+        const isQ = e.getFlag("hunters-hotpot", "isQuirk") || eName.includes("Причуда");
+        return isF || isQ;
+      }).map(e => e.id);
+
+      if (toDelete.length > 0) {
+        await actor.deleteEmbeddedDocuments("ActiveEffect", toDelete);
       }
+
+      // Накладываем свежие
+      const clonedEffects = effectsToCreate.map(e => foundry.utils.deepClone(e));
+      await actor.createEmbeddedDocuments("ActiveEffect", clonedEffects);
     }
   }
 
-  /**
-   * Создание предмета-остатков с dnd5e 5.3.3 Activities API
-   */
-  static async createLeftovers(cookActor, quantity, foodEffect, quirkEffect, isRuined) {
-    if (quantity <= 0) return;
+static async createLeftovers(cookActor, quantity, foodEffect, quirkEffect, isRuined) {
+    if (quantity <= 0 || !foodEffect) return;
     const activityId = foundry.utils.randomID();
 
-    let effectsToAttach = [foundry.utils.deepClone(foodEffect)];
-    let effectRefs = [{ _id: foodEffect._id }];
+    let fEff = foundry.utils.deepClone(foodEffect);
+    fEff._id = foundry.utils.randomID();
+    fEff.transfer = false;
+
+    let effectsToAttach = [fEff];
+    let effectRefs = [{ _id: fEff._id }];
 
     if (quirkEffect) {
-      effectsToAttach.push(foundry.utils.deepClone(quirkEffect));
-      effectRefs.push({ _id: quirkEffect._id });
+      let qEff = foundry.utils.deepClone(quirkEffect);
+      qEff._id = foundry.utils.randomID();
+      qEff.transfer = false;
+      effectsToAttach.push(qEff);
+      effectRefs.push({ _id: qEff._id });
     }
 
     const itemData = {
-      name: foodEffect.name,
+      name: fEff.name,
       type: "consumable",
-      img: foodEffect.img,
+      img: fEff.img,
       system: {
         type: { value: "food" },
         quantity: quantity,
         weight: { value: 1, units: "lb" },
-        description: { value: "<p>Остатки с привала. Теряют свойства через 1 час. При использовании накладывает эффект блюда.</p>" },
+        description: { value: "<p>Остатки с привала. Теряют свойства через 1 час.</p>" },
         uses: { value: 1, max: "1", per: "charges", autoDestroy: true },
         activities: {
           [activityId]: {
-            type: "utility", name: "Съесть порцию",
+            type: "utility",
+            name: "Съесть порцию",
             activation: { type: "action", value: 1 },
-            target: { template: { contiguous: false, units: "ft" }, affix: false },
-            consumption: { targets: [{ type: "itemUses", value: "1" }] },
+            target: { affix: false, prompt: true, type: "creature", value: 1 },
+            consumption: { targets: [{ type: "itemUses", value: 1 }] },
             effects: effectRefs
           }
         }
       },
-      effects: effectsToAttach
+      effects: effectsToAttach,
+      // Флаг для нашего перехватчика в main.js
+      flags: { "hunters-hotpot": { isLeftovers: true } }
     };
 
     await cookActor.createEmbeddedDocuments("Item", [itemData]);

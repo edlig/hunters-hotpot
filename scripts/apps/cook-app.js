@@ -26,7 +26,7 @@ export class CookApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const cookBase = i.flags["hunters-hotpot"].cookBase;
       if (!cookBase || cookBase === "spice") return;
 
-      for (const [rKey, rData] of Object.entries(HOTPOT_CONFIG.recipes.tier1)) {
+      for (const [rKey, rData] of Object.entries(HOTPOT_CONFIG.cooking.recipes.tier1)) {
         if (rData.reqBase === cookBase || cookBase === "any") {
           if (!this.groups[rKey]) this.groups[rKey] = [];
           this.groups[rKey].push(i);
@@ -35,9 +35,9 @@ export class CookApp extends HandlebarsApplicationMixin(ApplicationV2) {
     });
   }
 
-  async _prepareContext() {
+async _prepareContext() {
     const helpers = game.actors.filter(a => a.type === "character" && a.id !== this.actor.id).map(a => ({ id: a.id, name: a.name, img: a.img, bonus: a.system.attributes?.prof || 2 }));
-    const typeOptions = Object.keys(this.groups).map(k => ({ key: k, label: `${HOTPOT_CONFIG.recipes.tier1[k].name} (${this.groups[k].length} стаков)` }));
+    const typeOptions = Object.keys(this.groups).map(k => ({ key: k, label: `${HOTPOT_CONFIG.cooking.recipes.tier1[k].name} (${this.groups[k].length} стаков)` }));
 
     const essencesList = this.essences.map(e => {
       const sysRarity = e.system?.rarity || "common";
@@ -51,15 +51,17 @@ export class CookApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const formattedGroups = {};
     for (const [key, items] of Object.entries(this.groups)) {
       formattedGroups[key] = items.map(i => {
-        const q = i.system.quantity || 1;
-        const w = (i.system.weight?.value || 0) * q;
-        const isU = i.flags["hunters-hotpot"].slotsUsed > 1 || w >= 200 || ["Сердце", "Печень", "Глаз", "Мозг", "Яйцо"].some(n => i.name.includes(n));
+        const q = Number(i.system.quantity || 1);
+        const baseW = Number(i.system.weight?.value || 0);
+        const totalW = baseW * q; // Полный вес всего стака
+        
+        const isU = i.flags["hunters-hotpot"].slotsUsed > 1 || totalW >= 200 || ["Сердце", "Печень", "Глаз", "Мозг", "Яйцо"].some(n => i.name.includes(n));
 
         return {
           id: i.id,
           name: q > 1 ? `${i.name} (x${q})` : i.name,
           img: i.img,
-          w: Number(w.toFixed(2)),
+          w: Number(totalW.toFixed(2)), // В интерфейс уходит вес всего стака
           isU,
           type: i.flags["hunters-hotpot"].sourceType || "beast"
         };
@@ -67,7 +69,6 @@ export class CookApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
     return { helpers, hasHelpers: helpers.length > 0, typeOptions, essencesList, groups: formattedGroups };
   }
-
   _onRender(context, options) {
     super._onRender(context, options);
     this._updatePotUI();
@@ -156,13 +157,13 @@ export class CookApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const baseDC = 12;
     const conMod = this.actor.system.abilities.con?.mod || 0;
     const pb = hasCookUtensils ? (this.actor.system.attributes?.prof || 2) : 0;
-    const roll = await new Roll("1d20").evaluate({ async: true });
+    const roll = await new Roll("1d20").evaluate();
     const totalCheck = roll.total + conMod + pb + helperBonus;
 
     let outcome = "normal", quirk = null;
     if (totalCheck <= baseDC - 13) { outcome = "ruined"; }
-    else if (roll.total === 20 || totalCheck >= baseDC + 5) { outcome = "positive"; quirk = HOTPOT_CONFIG.quirks.positive[Math.floor(Math.random() * 8)]; }
-    else if (totalCheck < baseDC) { outcome = "negative"; quirk = HOTPOT_CONFIG.quirks.negative[Math.floor(Math.random() * 8)]; }
+    else if (roll.total === 20 || totalCheck >= baseDC + 5) { outcome = "positive"; quirk = HOTPOT_CONFIG.cooking.quirks.positive[Math.floor(Math.random() * 8)]; }
+    else if (totalCheck < baseDC) { outcome = "negative"; quirk = HOTPOT_CONFIG.cooking.quirks.negative[Math.floor(Math.random() * 8)]; }
 
     let essData = HOTPOT_CONFIG.essenceScaling["common"];
     if (essId !== "none") {
@@ -188,7 +189,7 @@ export class CookApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const formulaStr = `1к20[<b>${roll.total}</b>] ${conMod >= 0 ? '+' + conMod : conMod}(Тел) ${pb > 0 ? '+' + pb + '(Инстр.)' : ''} ${helperBonus > 0 ? '+' + helperBonus + '(Помощь)' : ''}`;
 
     const ctx = {
-      cookActor: this.actor, outcome, baseType, recipe: HOTPOT_CONFIG.recipes.tier1[baseType],
+      cookActor: this.actor, outcome, baseType, recipe: HOTPOT_CONFIG.cooking.recipes.tier1[baseType],
       essData, dmgType: HOTPOT_CONFIG.damageMapping[dominantType] || "fire", dominantType, specificStat: HOTPOT_CONFIG.statMapping[dominantType] || "con",
       finalPortions, quirk, totalCheck, baseDC, formulaStr, selectedItems: selected, reqPortions, requiredWeight, essId
     };

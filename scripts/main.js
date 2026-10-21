@@ -38,22 +38,22 @@ const HuntersHotpotAPI = {
 };
 
 Hooks.once("ready", async () => {
-    async function loadRecipes() {
-        try {
-            const response = await fetch("modules/hunters-hotpot/data/recipes.json");
-            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-            
-            const data = await response.json();
-            if (data && Object.keys(data).length > 0) {
-                HOTPOT_CONFIG.crafting.recipes = foundry.utils.mergeObject(HOTPOT_CONFIG.crafting.recipes || {}, data);
-            }
-        } catch (e) {
-            console.warn("Hunters Hotpot | Не удалось загрузить внешний recipes.json. Используются встроенные чертежи.", e);
-        } finally {
-            HOTPOT_CONFIG._isLoaded = true;
-        }
+  async function loadRecipes() {
+    try {
+      const response = await fetch("modules/hunters-hotpot/data/recipes.json");
+      if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+      const data = await response.json();
+      if (data && Object.keys(data).length > 0) {
+        HOTPOT_CONFIG.crafting.recipes = foundry.utils.mergeObject(HOTPOT_CONFIG.crafting.recipes || {}, data);
+      }
+    } catch (e) {
+      console.warn("Hunters Hotpot | Не удалось загрузить внешний recipes.json. Используются встроенные чертежи.", e);
+    } finally {
+      HOTPOT_CONFIG._isLoaded = true;
     }
-    loadRecipes();
+  }
+  loadRecipes();
 });
 
 // Привязываем API
@@ -70,35 +70,49 @@ Hooks.once("init", () => {
 // УНИВЕРСАЛЬНЫЙ ПЕРЕХВАТЧИК ИСПОЛЬЗОВАНИЯ ПРЕДМЕТОВ
 // ==========================================
 function handleItemUse(item) {
-    const flags = item.flags?.["hunters-hotpot"];
-    if (!flags) return true; // Обычный предмет, пропускаем
+  const flags = item.flags?.["hunters-hotpot"];
+  if (!flags) return true; // Обычный предмет, пропускаем
 
-    // 1. Кликнули по Набору Свежевателя
-    if (flags.isKit) {
-        const targets = game.user.targets;
-        if (targets.size !== 1) {
-            ui.notifications.warn("Hunters Hotpot | Выберите ровно одну мертвую цель для разделки!");
-            return false;
-        }
-        window.HuntersHotpot.harvest(item.actor);
-        return false; // Блокируем чат
+  // 1. Кликнули по Набору Свежевателя
+  if (flags.isKit) {
+    const targets = game.user.targets;
+    if (targets.size !== 1) {
+      ui.notifications.warn("Hunters Hotpot | Выберите ровно одну мертвую цель для разделки!");
+      return false;
+    }
+    window.HuntersHotpot.harvest(item.actor);
+    return false; // Блокируем чат
+  }
+
+  // 2. Кликнули по Заготовке (Крафт)
+  if (flags.isWIP) {
+    window.HuntersHotpot.craftWork(item.actor, item);
+    return false; // Блокируем чат
+  }
+
+  if (flags.isLeftovers) {
+    // Ищем старую еду/причуды (даже те, что были созданы до фикса флагов, по их названию)
+    const toDelete = item.actor.effects.filter(e => {
+      const eName = e.name || "";
+      const isF = e.getFlag("hunters-hotpot", "isFood") || eName.includes("Сытость") || eName.includes("Испорченная жижа");
+      const isQ = e.getFlag("hunters-hotpot", "isQuirk") || eName.includes("Причуда");
+      return isF || isQ;
+    }).map(e => e.id);
+
+    if (toDelete.length > 0) {
+      item.actor.deleteEmbeddedDocuments("ActiveEffect", toDelete); // Счищаем старое
     }
 
-    // 2. Кликнули по Заготовке (Крафт)
-    if (flags.isWIP) {
-        window.HuntersHotpot.craftWork(item.actor, item);
-        return false; // Блокируем чат
-    }
-
-    return true;
+    return true; // ВАЖНО: Возвращаем true, чтобы система сама списала порцию и наложила новый бафф!
+  }
 }
 
 Hooks.on("dnd5e.preUseItem", (item) => {
-    if (handleItemUse(item) === false) return false;
+  if (handleItemUse(item) === false) return false;
 });
 
 Hooks.on("dnd5e.preUseActivity", (activity) => {
-    if (handleItemUse(activity.item) === false) return false;
+  if (handleItemUse(activity.item) === false) return false;
 });
 
 
@@ -107,9 +121,9 @@ Hooks.on("dnd5e.preUseActivity", (activity) => {
 // ==========================================
 Hooks.on("dnd5e.getItemContextOptions", (item, options) => {
   const flags = item.flags?.["hunters-hotpot"] || {};
-  
+
   // ИСПРАВЛЕНО: Убрана привязка к имени ".includes('набор свежевателя')"
-  const isKit = flags.isKit; 
+  const isKit = flags.isKit;
   const isBag = flags.isGiftBag && item.type === "container";
   const isMaterial = flags.craftType;
   const isWIP = flags.isWIP;
@@ -195,7 +209,7 @@ Hooks.on("dnd5e.getItemContextOptions", (item, options) => {
         const d = new Dialog({
           title: `Чертежи: ${item.name}`,
           content: content,
-          buttons: {}, 
+          buttons: {},
           render: (html) => {
             html.find('.hh-recipe-btn').click(ev => {
               const recipeId = ev.currentTarget.dataset.id;
@@ -205,8 +219,8 @@ Hooks.on("dnd5e.getItemContextOptions", (item, options) => {
               });
             });
             html.find('.hh-recipe-btn').hover(
-              function() { $(this).css("background", "rgba(16, 185, 129, 0.1)"); },
-              function() { $(this).css("background", "var(--color-bg-body)"); }
+              function () { $(this).css("background", "rgba(16, 185, 129, 0.1)"); },
+              function () { $(this).css("background", "var(--color-bg-body)"); }
             );
           }
         }, { width: 340 }).render(true);

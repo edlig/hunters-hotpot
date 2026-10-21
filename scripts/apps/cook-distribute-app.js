@@ -43,7 +43,7 @@ export class CookDistributeApp extends HandlebarsApplicationMixin(ApplicationV2)
 
     await CookService.consumeIngredients(this.ctx.cookActor, this.ctx.selectedItems, this.ctx.requiredWeight, this.ctx.essId);
 
-    const foodEffect = CookService.generateEffectData(this.ctx.outcome, this.ctx.baseType, this.ctx.essData, this.ctx.dmgType, this.ctx.dominantType, this.ctx.specificStat, this.ctx.cookActor);
+    const foodEffect = CookService.generateEffectData(this.ctx.outcome, this.ctx.recipe, this.ctx.essData, this.ctx.dmgType, this.ctx.dominantType, this.ctx.specificStat, this.ctx.cookActor);
     const quirkEffect = CookService.generateQuirkEffect(this.ctx.quirk, this.ctx.outcome, this.ctx.cookActor);
 
     await CookService.applyEffectsToActors(fedIds, foodEffect, quirkEffect);
