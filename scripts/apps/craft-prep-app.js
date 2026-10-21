@@ -347,7 +347,7 @@ async _onSubmit(event, form, formData) {
       if (!recipeId) throw new Error("Рецепт не выбран");
 
       let activeRecipe = HOTPOT_CONFIG.crafting.recipes[recipeId];
-      
+      if (activeRecipe) activeRecipe.id = recipeId;
       if (activeRecipe.isCustom) {
         const customName = form.querySelector("#custom-name-inp").value;
         if (customName) {

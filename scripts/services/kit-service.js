@@ -17,9 +17,18 @@ export class KitService {
       const kitData = {
         name: "Набор Свежевателя", type: "consumable", img: "icons/tools/medical/toolkit-surgical-pink.webp",
         system: {
-          type: { value: "tool" }, uses: { max: 10, value: 10, spent: 0, per: "charges", autoDestroy: false },
-          description: { value: "<p>Набор ножей, пил, скребков и алхимических солей для свежевания.</p>" },
-          weight: { value: 5, units: "lb" }, price: { value: 10, denomination: "gp" }
+          description: { value: "<p>Используйте этот набор (Действие), выделив мертвую цель, чтобы собрать трофеи.</p>" },
+          uses: { value: 10, max: "10" },
+          price: { value: 50, denomination: "gp" },
+          weight: { value: 5, units: "lb" },
+          type: { value: "art" }, // artisan's tools
+          activities: {
+            "harvest": {
+              type: "utility",
+              name: "Разделать тушу",
+              activation: { type: "action", value: 1, condition: "Только на мертвую цель" }
+            }
+          }
         },
         flags: { "hunters-hotpot": { isKit: true } }
       };
@@ -32,7 +41,7 @@ export class KitService {
 
   static async processRepair(actor, kitItem, selectedItems, chargesToAdd, mode) {
     let weightConsumed = 0;
-    
+
     const itemsToDelete = [];
     const itemsToUpdate = [];
 
@@ -42,18 +51,18 @@ export class KitService {
 
       const unitWeight = item.system.weight?.value || 0;
       const currentQty = item.system.quantity || 1;
-      
+
       // Берем ровно столько, сколько указал игрок в инпуте (с защитой от большего числа)
-      const unitsToConsume = Math.min(sel.qty, currentQty); 
+      const unitsToConsume = Math.min(sel.qty, currentQty);
 
       weightConsumed += unitsToConsume * unitWeight;
 
       if (unitsToConsume >= currentQty) {
-        itemsToDelete.push(sel.id); 
+        itemsToDelete.push(sel.id);
       } else {
         itemsToUpdate.push({
           _id: sel.id,
-          "system.quantity": currentQty - unitsToConsume 
+          "system.quantity": currentQty - unitsToConsume
         });
       }
     }
@@ -78,8 +87,8 @@ export class KitService {
     await actor.updateEmbeddedDocuments("Item", [{
       _id: kitItem.id,
       "system.uses.max": newMax,
-      "system.uses.value": newCurrent, 
-      "system.uses.spent": newSpent    
+      "system.uses.value": newCurrent,
+      "system.uses.spent": newSpent
     }]);
 
     return { mode, chargesToAdd, weightConsumed };
