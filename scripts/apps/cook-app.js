@@ -78,14 +78,13 @@ async _prepareContext() {
     this._updatePotUI();
   }
 
-  _updatePotUI() {
+_updatePotUI() {
     const form = this.element;
     const baseTypeEl = form.querySelector("#base-type");
     if (!baseTypeEl) return;
 
     const baseType = baseTypeEl.value;
     const reqPortions = parseInt(form.querySelector("#portions-inp").value) || 1;
-
     const weightPerPortion = game.settings.get("hunters-hotpot", "cookPortionWeight");
     const requiredWeight = reqPortions * weightPerPortion;
 
@@ -97,18 +96,49 @@ async _prepareContext() {
     if (activeGroup) activeGroup.style.display = "block";
 
     let curWeight = 0;
+    let typeWeights = {}; // Для динамического определения типа прямо в UI
+
     if (activeGroup) {
-      activeGroup.querySelectorAll('.ing-cb:checked').forEach(cb => {
-        const w = parseFloat(cb.dataset.w);
-        if (cb.dataset.u === "true") curWeight += w;
-        else curWeight += Math.min(w, requiredWeight - curWeight > 0 ? requiredWeight - curWeight : 0);
+      // Сортируем так же, как в сабмите, чтобы UI не врал насчет доминирующего типа
+      const checked = Array.from(activeGroup.querySelectorAll('.ing-cb:checked'));
+      checked.sort((a, b) => {
+        const uA = a.dataset.u === "true";
+        const uB = b.dataset.u === "true";
+        const wA = parseFloat(a.dataset.w);
+        const wB = parseFloat(b.dataset.w);
+        return (uA === uB) ? (wA - wB) : (uA ? -1 : 1);
       });
+
+      let tempTarget = requiredWeight;
+      for (let cb of checked) {
+        const w = parseFloat(cb.dataset.w);
+        const isU = cb.dataset.u === "true";
+        const type = cb.dataset.type || "beast";
+
+        if (tempTarget <= 0 && !isU) continue; 
+
+        const take = isU ? w : Math.min(tempTarget, w);
+        curWeight += take;
+        tempTarget -= take;
+        typeWeights[type] = (typeWeights[type] || 0) + take;
+      }
     }
 
     const potEl = form.querySelector("#pot-weight");
     if (potEl) {
       potEl.innerText = curWeight.toFixed(1);
       potEl.style.color = curWeight >= requiredWeight ? "#10b981" : "#ef4444";
+    }
+
+    // --- НОВОЕ: Показ/скрытие стихии ---
+    let dominantType = "beast";
+    if (Object.keys(typeWeights).length > 0) {
+      dominantType = Object.keys(typeWeights).reduce((a, b) => typeWeights[a] > typeWeights[b] ? a : b);
+    }
+
+    const elemContainer = form.querySelector("#element-select-container");
+    if (elemContainer) {
+      elemContainer.style.display = (dominantType === "dragon" || dominantType === "elemental") ? "block" : "none";
     }
   }
 
@@ -183,14 +213,26 @@ async _prepareContext() {
       typeWeights[s.type] = (typeWeights[s.type] || 0) + take;
     }
 
-    const finalPortions = targetW < 0 ? reqPortions + Math.floor(Math.abs(targetW) / weightPerPortion) : reqPortions;
-    let dominantType = Object.keys(typeWeights).reduce((a, b) => typeWeights[a] > typeWeights[b] ? a : b);
+const finalPortions = targetW < 0 ? reqPortions + Math.floor(Math.abs(targetW) / weightPerPortion) : reqPortions;
+    
+    let dominantType = "beast";
+    if (Object.keys(typeWeights).length > 0) {
+      dominantType = Object.keys(typeWeights).reduce((a, b) => typeWeights[a] > typeWeights[b] ? a : b);
+    }
+
+    // --- НОВОЕ: Определяем итоговую стихию ---
+    let dmgType = HOTPOT_CONFIG.damageMapping[dominantType] || "fire";
+    if (dominantType === "dragon" || dominantType === "elemental") {
+      const customDmg = form.querySelector("#custom-dmg-type");
+      if (customDmg) dmgType = customDmg.value;
+    }
 
     const formulaStr = `1к20[<b>${roll.total}</b>] ${conMod >= 0 ? '+' + conMod : conMod}(Тел) ${pb > 0 ? '+' + pb + '(Инстр.)' : ''} ${helperBonus > 0 ? '+' + helperBonus + '(Помощь)' : ''}`;
 
     const ctx = {
       cookActor: this.actor, outcome, baseType, recipe: HOTPOT_CONFIG.cooking.recipes.tier1[baseType],
-      essData, dmgType: HOTPOT_CONFIG.damageMapping[dominantType] || "fire", dominantType, specificStat: HOTPOT_CONFIG.statMapping[dominantType] || "con",
+      essData, dmgType, // <-- Передаем именно нашу перехваченную стихию!
+      dominantType, specificStat: HOTPOT_CONFIG.statMapping[dominantType] || "con",
       finalPortions, quirk, totalCheck, baseDC, formulaStr, selectedItems: selected, reqPortions, requiredWeight, essId
     };
 
