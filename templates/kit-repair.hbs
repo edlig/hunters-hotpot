@@ -64,7 +64,7 @@
       </div>
     </div>
 
-    <button type="submit" disabled style="background: {{#if (eq mode 'upgrade')}}#0284c7{{else}}#10b981{{/if}}; color: #f8fafc; border: none; padding: 8px; border-radius: 4px; width: 100%; cursor: pointer; font-weight:bold; opacity: 0.5; transition: opacity 0.2s;">
+    <button type="submit" id="submit-btn" disabled style="background: {{#if (eq mode 'upgrade')}}#0284c7{{else}}#10b981{{/if}}; color: #f8fafc; border: none; padding: 8px; border-radius: 4px; width: 100%; cursor: pointer; font-weight:bold; opacity: 0.5; transition: opacity 0.2s;">
       {{#if (eq mode "upgrade")}}
         <i class="fas fa-plus-circle"></i> Расширить набор
       {{else}}

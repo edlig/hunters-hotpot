@@ -2,7 +2,7 @@
   "id": "hunters-hotpot",
   "title": "Hunter's Hotpot",
   "description": "Модуль для свежевания монстров, готовки и крафта.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "authors": [
     {
       "name": "Ed"
@@ -18,7 +18,8 @@
         "id": "dnd5e",
         "type": "system",
         "compatibility": {
-          "minimum": "5.3.3"
+          "minimum": "5.3.3",
+          "verified": "6.0.6"
         }
       }
     ]

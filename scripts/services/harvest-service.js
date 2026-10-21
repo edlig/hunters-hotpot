@@ -12,7 +12,7 @@ export class HarvestService {
 
   static validateKit(actor, sizeData) {
     const kit = actor.items.find(i => i.getFlag("hunters-hotpot", "isKit") || i.name.toLowerCase().includes("набор свежевателя"));
-    const cost = sizeData?.charge || 1;
+    const cost = sizeData?.charge ?? 1;
     if (!kit) throw new Error("У вас нет Набора Свежевателя! Запустите макрос 'Ремонт Набора', чтобы получить его.");
     const stats = KitService.getStats(kit);
     if (stats.current < cost) throw new Error(`В Наборе не хватает зарядов (Осталось: ${stats.current} зар., а нужно ${cost}).`);
@@ -28,12 +28,42 @@ export class HarvestService {
     if (newCurrent === 0) ui.notifications.warn("В Наборе Свежевателя закончились инструменты и соли!");
   }
 
-  static async applyHarvestEffect(ctx) {
-    const effectData = { name: "Распотрошен", icon: "icons/skills/wounds/injury-abdomen-blood-red.webp", flags: { core: { overlay: false } } };
-    const hasEffect = ctx.targetToken.actor.effects.some(e => e.name === "Распотрошен" || e.label === "Распотрошен");
-    if (!hasEffect) await ctx.targetToken.actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
-    await ctx.targetToken.actor.toggleStatusEffect("invisible", { active: true });
-    if (ctx.kit) await this.consumeKitCharge(ctx.playerActor, ctx.kit, ctx.sizeData?.charge || 1);
+static async applyHarvestEffect(ctx) {
+    // 1. Трата зарядов набора
+    if (ctx.kit) {
+      await this.consumeKitCharge(ctx.playerActor, ctx.kit, ctx.sizeData?.charge ?? 1);
+    }
+
+    const actor = ctx.targetToken.actor;
+    if (!actor) return;
+
+    // Проверяем, не висит ли уже наш эффект (чтобы не дублировать)
+    const hasGutted = actor.effects.some(e => e.name === "Распотрошен" || e.label === "Распотрошен");
+    if (hasGutted) return;
+
+    // 2. Формируем ЕДИНЫЙ эффект (и иконка, и невидимость разом)
+    const effectData = { 
+      name: "Распотрошен", 
+      icon: "icons/skills/wounds/injury-abdomen-blood-red.webp", 
+      flags: { core: { overlay: false } },
+      statuses: ["invisible"] // Встроенная магия Фаундри: автоматом скроет токен!
+    };
+
+    // 3. Вешаем эффект
+    if (actor.isOwner) {
+      // Есть права (ГМ) — вешаем напрямую
+      await actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+    } 
+    else if (globalThis.MidiQOL?.socket) {
+      // Нет прав (Игрок) — отдаем объект Midi-QOL, он всё сделает за нас
+      await globalThis.MidiQOL.socket().executeAsGM("createEffects", { 
+        actorUuid: actor.uuid, 
+        effects: [effectData] 
+      });
+    } 
+    else {
+      console.warn("Hunters Hotpot | Нет прав на токен и не найден Midi-QOL. Эффекты не применены.");
+    }
   }
 
   static async generateLoot(ctx, selections, rollData, essObtained, essData) {

@@ -12,7 +12,7 @@ export class HarvestPrepApp extends HandlebarsApplicationMixin(ApplicationV2) {
     window: { title: "Сбор компонентов: Подготовка", icon: "fas fa-hand-sparkles" },
     position: { width: 380, height: "auto" },
     actions: { toggleHelper: HarvestPrepApp._onToggleHelper },
-    form: { handler: function(e, f, d) { this._onSubmit(e, f, d); }, closeOnSubmit: true }
+    form: { handler: function (e, f, d) { this._onSubmit(e, f, d); }, closeOnSubmit: true }
   };
 
   static PARTS = { form: { template: "modules/hunters-hotpot/templates/harvest-prep.hbs" } };
@@ -24,7 +24,7 @@ export class HarvestPrepApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const mSize = targetToken.actor.system.traits?.size || "med";
       const sizeData = HOTPOT_CONFIG.sizes[mSize] || HOTPOT_CONFIG.sizes["med"];
       const kit = HarvestService.validateKit(playerActor, sizeData);
-      
+
       const ctx = {
         playerActor, targetToken, mName: targetToken.name, mType,
         cr: targetToken.actor.system.details?.cr || 0,
@@ -47,7 +47,7 @@ export class HarvestPrepApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (["giant", "construct", "plant"].includes(t)) statOptions.push({ value: "str", label: "Сила (Грубая разделка)" });
 
     const helpers = canvas.tokens.placeables
-      .filter(tok => tok.actor && tok.id !== this.ctx.playerActor.id && tok.document.disposition === 1)
+      .filter(tok => tok.actor && tok.actor.id !== this.ctx.playerActor.id && tok.document.disposition === 1)
       .map(tok => {
         const pb = tok.actor.system.attributes?.prof || 2;
         const hasProf = (tok.actor.system.skills[this.ctx.skillInfo.key]?.proficient || 0) >= 1;
@@ -62,7 +62,7 @@ export class HarvestPrepApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const contentDiv = form.querySelector(".hh-app-content");
     const maxHelpers = parseInt(contentDiv.dataset.maxHelpers) || 1;
     const isSelected = target.classList.contains("selected");
-    
+
     if (maxHelpers === 1) {
       form.querySelectorAll(".hh-helper-card").forEach(el => { el.style.borderColor = "#334155"; el.classList.remove("selected"); });
       if (!isSelected) { target.classList.add("selected"); target.style.borderColor = "#10b981"; }
@@ -84,17 +84,17 @@ export class HarvestPrepApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const statMod = this.ctx.playerActor.system.abilities[stat]?.mod || 0;
     const pb = this.ctx.playerActor.system.attributes?.prof || 2;
     const skillBonus = (this.ctx.playerActor.system.skills[this.ctx.skillInfo.key]?.proficient || 0) >= 1 ? pb : 0;
-    
+
     const totalCheck = roll.total + statMod + skillBonus + helpBonus;
     const essData = HOTPOT_CONFIG.getEssence(this.ctx.cr);
     const essObtained = essData && totalCheck >= essData.dc;
 
     const rollData = { total: totalCheck, isCrit: roll.total === 20, baseRoll: roll.total, statMod, skillBonus, helpBonus, helpers: helpersList };
-    
+
     // Новая логика чтения матрицы вместо старой lootTable
     const eligible = Object.values(HOTPOT_CONFIG.harvestCategories).filter(data => data.t.includes(this.ctx.mType) && totalCheck >= data.dc);
 
-if (eligible.length === 0 && !essObtained) {
+    if (eligible.length === 0 && !essObtained) {
       ui.notifications.warn(`Бросок (${totalCheck}) провален. Туша испорчена.`);
       await HarvestService.applyHarvestEffect(this.ctx); // <--- Обновленный вызов
       return;

@@ -4,50 +4,103 @@ export class CraftService {
   /**
    * ФАЗА 1: Списание сырья и создание Заготовки
    */
-  static async startCraftingProject(actor, category, rarity, essId, selectedItems, targetCost, activeRecipe, batchQty = 1) {
-    let deletes = [];
-    let updates = [];
-
-    if (essId && essId !== "none") deletes.push(essId);
-
-    for (let sel of selectedItems) {
-      const item = actor.items.get(sel.id);
-      if (!item) continue;
-      const currentQty = item.system.quantity || 1;
-      const unitsToConsume = Math.min(sel.qty, currentQty);
-
-      if (unitsToConsume >= currentQty) deletes.push(sel.id);
-      else updates.push({ _id: sel.id, "system.quantity": currentQty - unitsToConsume });
+ static async startCraftingProject(actor, category, rarity, essId, selectedItems, targetCost, activeRecipe, batchQty = 1) {
+    
+    // --- 🛡️ НАЧАЛО АТОМАРНОЙ ВАЛИДАЦИИ (Серверная проверка) ---
+    
+    // 1. Проверка на пустоту (защита от пустого массива компонентов)
+    if (!selectedItems || selectedItems.length === 0) {
+        throw new Error("Не выбрано ни одного компонента для крафта!");
     }
 
-    if (deletes.length > 0) await actor.deleteEmbeddedDocuments("Item", deletes);
-    if (updates.length > 0) await actor.updateEmbeddedDocuments("Item", updates);
+    // 2. Проверка эссенции
+    if (essId && essId !== "none" && !actor.items.has(essId)) {
+        throw new Error("Выбранная эссенция пропала из инвентаря!");
+    }
+    
+    let providedValue = 0;
+    const providedTags = new Set();
 
-    const rData = HOTPOT_CONFIG.crafting.rarity[rarity];
-    const timeMult = game.settings.get("hunters-hotpot", "craftTimeMultiplier") ?? 1;
-    const isConsumable = category === "potion" || activeRecipe?.isConsumable;
-
-    // Время не умножается на размер партии, всё варится в одном котле!
-    const baseHours = isConsumable ? Math.max(1, Math.floor(rData.hours / 2)) : rData.hours;
-    const targetHours = Math.max(1, Math.floor(baseHours * timeMult));
-
-    const recipeName = activeRecipe ? activeRecipe.name : "Неизвестный рецепт";
-    const batchStr = batchQty > 1 ? ` (x${batchQty})` : ""; // Визуальная приписка
-
-    const wipData = {
-      name: `Заготовка: ${recipeName}${batchStr} (${rData.label})`,
-      type: "loot", img: "icons/sundries/documents/blueprints-teal.webp",
-      system: { description: { value: `<p>Незавершенный проект. Текущий прогресс: <b>0 / ${targetHours} ч.</b></p>` }, weight: { value: 1, units: "lb" } },
-      flags: {
-        "hunters-hotpot": {
-          isWIP: true, category, rarity, essId, recipeName, targetHours, currentHours: 0,
-          successes: 0, failures: 0, dc: rData.dc,
-          batchQty // СОХРАНЯЕМ ПАРТИЮ ВО ФЛАГАХ!
+    // 3. Строгая проверка каждого куска сырья (наличие и количество)
+    for (let sel of selectedItems) {
+        const item = actor.items.get(sel.id);
+        if (!item) {
+            throw new Error("Один из выбранных компонентов пропал из инвентаря!");
         }
+        
+        const currentQty = item.system.quantity || 1;
+        if (currentQty < sel.qty) {
+            throw new Error(`Не хватает сырья: ${item.name} (Нужно: ${sel.qty}, Есть: ${currentQty})`);
+        }
+
+        // Считаем реальную стоимость и собираем теги прямо из базы Foundry, а не из UI
+        const price = item.system.price?.value || 0;
+        providedValue += (price * sel.qty);
+
+        const flags = item.flags["hunters-hotpot"] || {};
+        if (flags.craftType) providedTags.add(flags.craftType);
+    }
+
+    // 4. Проверка общей стоимости (защита от бесплатного крафта)
+    if (providedValue < targetCost) {
+        throw new Error(`Сырья недостаточно! (Вложено: ${providedValue.toFixed(1)} зм, Требуется: ${targetCost.toFixed(1)} зм)`);
+    }
+
+    // 5. Проверка обязательных тегов рецепта
+    if (activeRecipe && activeRecipe.reqTags) {
+        for (let reqTag of activeRecipe.reqTags) {
+            if (!providedTags.has(reqTag) && !providedTags.has("any")) {
+                throw new Error(`Выбранные компоненты не подходят. Не хватает: ${HOTPOT_CONFIG.craftTags?.[reqTag]?.label || reqTag}`);
+            }
+        }
+    }
+    
+    // --- 🛡️ КОНЕЦ ВАЛИДАЦИИ. Если мы здесь, транзакция 100% легальна ---
+
+    let deletes = []; 
+    let updates = []; 
+    
+    // Подготавливаем эссенцию к удалению
+    if (essId && essId !== "none") deletes.push(essId);
+
+    // Подготавливаем сырье к удалению или уменьшению количества
+    for (let sel of selectedItems) {
+      const item = actor.items.get(sel.id);
+      const currentQty = item.system.quantity || 1;
+      
+      if (currentQty === sel.qty) {
+        deletes.push(item.id); // Удаляем предмет целиком, если потратили всё
+      } else {
+        updates.push({ _id: item.id, "system.quantity": currentQty - sel.qty }); // Отнимаем количество
       }
+    }
+
+    const flags = {
+      isWIP: true, 
+      recipeId: "custom", 
+      recipeName: activeRecipe?.name || "Неизвестный предмет",
+      category, 
+      rarity, 
+      progress: 0, 
+      target: HOTPOT_CONFIG.crafting.rarity[rarity]?.hours || 8,
+      batchQty
     };
 
-    await actor.createEmbeddedDocuments("Item", [wipData]);
+    const wipItemData = {
+      name: `[Заготовка] ${activeRecipe?.name || "Предмет"}`,
+      type: "loot",
+      img: "icons/sundries/documents/blueprints-teal.webp",
+      system: {
+        description: { value: "<p>Проект в работе. Используйте набор инструментов для завершения.</p>" },
+        weight: { value: 2, units: "lb" }
+      },
+      flags: { "hunters-hotpot": flags }
+    };
+
+    // Выполняем пачку обновлений максимально атомарно
+    if (updates.length > 0) await actor.updateEmbeddedDocuments("Item", updates);
+    if (deletes.length > 0) await actor.deleteEmbeddedDocuments("Item", deletes);
+    await actor.createEmbeddedDocuments("Item", [wipItemData]);
   }
 
   /**

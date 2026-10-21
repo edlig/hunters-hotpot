@@ -8,7 +8,7 @@ static DEFAULT_OPTIONS = {
     id: "hotpot-craft-prep", classes: ["hunters-hotpot"], tag: "form",
     window: { frame: true, positioned: true, title: "Ремесленный Верстак", icon: "fas fa-hammer" },
     position: { width: 560, height: 620 },
-    form: { handler: function (e, f, d) { this._onSubmit(e, f, d); }, closeOnSubmit: true }
+    form: { handler: function (e, f, d) { this._onSubmit(e, f, d); }, closeOnSubmit: false }
   };
 
   static PARTS = { form: { template: "modules/hunters-hotpot/templates/craft-prep.hbs" } };
@@ -43,14 +43,6 @@ static DEFAULT_OPTIONS = {
   _onRender(context, options) {
     super._onRender(context, options);
     const el = this.element;
-
-    // НАДЕЖНОЕ ЦЕНТРИРОВАНИЕ ОКНА V2 НА ЭКРАНЕ
-    requestAnimationFrame(() => {
-        if (el) {
-            el.style.left = `${Math.max(0, (window.innerWidth - el.offsetWidth) / 2)}px`;
-            el.style.top = `${Math.max(0, (window.innerHeight - el.offsetHeight) / 2)}px`;
-        }
-    });
 
     this._initStaticDropdowns();
     this._populateRecipes();
@@ -342,34 +334,68 @@ static DEFAULT_OPTIONS = {
     }
   }
 
-  async _onSubmit(event, form, formData) {
-    const recipeId = form.querySelector("#recipe-sel").value;
-    const essId = form.querySelector("#essence-sel").value;
-    if (!recipeId) return;
-
-    let activeRecipe = HOTPOT_CONFIG.crafting.recipes[recipeId];
-    
-    if (activeRecipe.isCustom) {
-      const customName = form.querySelector("#custom-name-inp").value;
-      if (customName) {
-        activeRecipe = foundry.utils.deepClone(activeRecipe);
-        activeRecipe.name = customName;
-      }
+async _onSubmit(event, form, formData) {
+    const submitBtn = form.querySelector("#submit-btn");
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Обработка...';
     }
 
-    const rarity = activeRecipe.rarity;
-    const category = activeRecipe.category;
-    
-    const batchQty = (category === "potion" || activeRecipe.isConsumable) ? (parseInt(form.querySelector("#batch-qty-inp").value) || 1) : 1;
-    const reqCost = this._calculateTargetCost(activeRecipe) * batchQty;
+    try {
+      const recipeId = form.querySelector("#recipe-sel").value;
+      const essId = form.querySelector("#essence-sel").value;
+      if (!recipeId) throw new Error("Рецепт не выбран");
 
-    const selected = [];
-    form.querySelectorAll('.mat-qty').forEach(input => {
-      let val = parseInt(input.value) || 0;
-      if (val > 0) selected.push({ id: input.dataset.id, qty: val });
-    });
+      let activeRecipe = HOTPOT_CONFIG.crafting.recipes[recipeId];
+      
+      if (activeRecipe.isCustom) {
+        const customName = form.querySelector("#custom-name-inp").value;
+        if (customName) {
+          activeRecipe = foundry.utils.deepClone(activeRecipe);
+          activeRecipe.name = customName;
+        }
+      }
 
-    await CraftService.startCraftingProject(this.actor, category, rarity, essId, selected, reqCost, activeRecipe, batchQty);
-    ui.notifications.info(`Проект "${activeRecipe.name}" начат! Заготовка добавлена в инвентарь.`);
+      const rarity = activeRecipe.rarity;
+      const category = activeRecipe.category;
+      
+      const batchQty = (category === "potion" || activeRecipe.isConsumable) ? (parseInt(form.querySelector("#batch-qty-inp").value) || 1) : 1;
+      const reqCost = this._calculateTargetCost(activeRecipe) * batchQty;
+
+      const selected = [];
+      form.querySelectorAll('.mat-qty').forEach(input => {
+        let val = parseInt(input.value) || 0;
+        if (val > 0) selected.push({ id: input.dataset.id, qty: val });
+      });
+
+      // Ждем ответа от сервиса
+      await CraftService.startCraftingProject(this.actor, category, rarity, essId, selected, reqCost, activeRecipe, batchQty);
+      ui.notifications.info(`Проект "${activeRecipe.name}" начат! Заготовка добавлена в инвентарь.`);
+      
+      // ЗАКРЫВАЕМ ОКНО ТОЛЬКО ЕСЛИ ВСЕ ПРОШЛО УСПЕШНО
+      this.close();
+
+    } catch (error) {
+      // ЕСЛИ ОШИБКА: Окно не закрывается, выводим уведомление
+      ui.notifications.error(error.message);
+
+      // Запоминаем текущий выбранный чертеж, чтобы он не сбросился при перерисовке
+      const currentRecipeId = form.querySelector("#recipe-sel")?.value;
+      if (currentRecipeId) {
+        this.incomingData = { recipeId: currentRecipeId };
+      }
+
+      // Заново читаем инвентарь персонажа (подтягиваем актуальные остатки)
+      this.harvestItems = this.actor.items.filter(i => i.flags["hunters-hotpot"] && !i.flags["hunters-hotpot"].isEssence && (i.flags["hunters-hotpot"].craftType || i.flags["hunters-hotpot"].componentId));
+      this.essences = this.actor.items.filter(i => i.flags["hunters-hotpot"]?.isEssence);
+
+      // Перерисовываем интерфейс (список обновится, пропавшие предметы исчезнут)
+      await this.render({ force: false });
+
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-hammer"></i> Начать проект';
+      }
+    }
   }
 }

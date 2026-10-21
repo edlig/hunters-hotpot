@@ -125,41 +125,52 @@ export class HarvestLootApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
   }
 
-  async _onSubmit(event, form, formData) {
-    const selections = [];
-    const yieldPerSlot = this.ctx.yieldPerSlot;
-
-    form.querySelectorAll(".cb-slot:checked").forEach(cb => {
-      const row = cb.closest(".hh-li");
-      const catId = row.dataset.cat;
-      const catData = HOTPOT_CONFIG.harvestCategories[catId];
-      
-      let finalName = catId === "unique" ? (row.querySelector(".hh-custom-val").value || "Неопознанная часть") : row.querySelector(".hh-preset-sel").value;
-      if (finalName === "custom") finalName = row.querySelector(".hh-custom-val").value || "Часть туши";
-
-      const finalQuantity = catData.u ? 1 : yieldPerSlot;
-
-      selections.push({
-        id: foundry.utils.randomID(),
-        name: `${finalName} (${this.ctx.mName})`,
-        img: catData.img, dc: catData.dc,
-        w: parseFloat(cb.dataset.w), p: parseFloat(cb.dataset.p),
-        slots: parseInt(cb.dataset.slots) || 1,
-        q: finalQuantity, 
-        base: catData.cookBase, cType: catData.cType, u: catData.u,
-        sType: this.ctx.mType
-      });
-    });
-
-    if (selections.length === 0 && !this.essObtained) return ui.notifications.warn("Вы ничего не собрали!");
+async _onSubmit(event, form, formData) {
+    const submitBtn = form.querySelector("#submit-btn");
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Сбор...';
+    }
 
     try {
-      const createdItems = await HarvestService.generateLoot(this.ctx, selections, this.rollData, this.essObtained, this.essData);
-      await HarvestService.applyHarvestEffect(this.ctx); 
-      HarvestService.sendReport(this.ctx, createdItems, this.rollData, selections.length);
-      ui.notifications.info("Сбор успешно завершен!");
-    } catch (e) { 
-      ui.notifications.error(e.message); 
+        const selections = [];
+        const yieldPerSlot = this.ctx.yieldPerSlot;
+
+        form.querySelectorAll(".cb-slot:checked").forEach(cb => {
+          const row = cb.closest(".hh-li");
+          const catId = row.dataset.cat;
+          const catData = HOTPOT_CONFIG.harvestCategories[catId];
+          
+          let finalName = catId === "unique" ? (row.querySelector(".hh-custom-val").value || "Неопознанная часть") : row.querySelector(".hh-preset-sel").value;
+          if (finalName === "custom") finalName = row.querySelector(".hh-custom-val").value || "Часть туши";
+
+          const finalQuantity = catData.u ? 1 : yieldPerSlot;
+
+          selections.push({
+            id: foundry.utils.randomID(),
+            name: `${finalName} (${this.ctx.mName})`,
+            img: catData.img, dc: catData.dc,
+            w: parseFloat(cb.dataset.w), p: parseFloat(cb.dataset.p),
+            slots: parseInt(cb.dataset.slots) || 1,
+            q: finalQuantity, 
+            base: catData.cookBase, cType: catData.cType, u: catData.u,
+            sType: this.ctx.mType
+          });
+        });
+
+        if (selections.length === 0 && !this.essObtained) throw new Error("Вы ничего не собрали!");
+
+        const createdItems = await HarvestService.generateLoot(this.ctx, selections, this.rollData, this.essObtained, this.essData);
+        await HarvestService.applyHarvestEffect(this.ctx); 
+        HarvestService.sendReport(this.ctx, createdItems, this.rollData, selections.length);
+        ui.notifications.info("Сбор успешно завершен!");
+
+    } catch (error) { 
+        ui.notifications.error(error.message);
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-cut"></i> Забрать трофеи';
+        }
     }
   }
 }
