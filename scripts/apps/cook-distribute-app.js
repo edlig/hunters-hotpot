@@ -38,19 +38,18 @@ export class CookDistributeApp extends HandlebarsApplicationMixin(ApplicationV2)
   }
 
   async _onSubmit(event, form, formData) {
-const fedIds = []; const fedNames = [];
+    const fedIds = []; const fedNames = [];
     form.querySelectorAll('.eater-cb:checked').forEach(cb => { fedIds.push(cb.dataset.id); fedNames.push(cb.dataset.name); });
 
-    // ВМЕСТО this.ctx.reqPortions ПЕРЕДАЕМ this.ctx.requiredWeight !!!
     await CookService.consumeIngredients(this.ctx.cookActor, this.ctx.selectedItems, this.ctx.requiredWeight, this.ctx.essId);
-    
+
     const foodEffect = CookService.generateEffectData(this.ctx.outcome, this.ctx.baseType, this.ctx.essData, this.ctx.dmgType, this.ctx.dominantType, this.ctx.specificStat, this.ctx.cookActor);
     const quirkEffect = CookService.generateQuirkEffect(this.ctx.quirk, this.ctx.outcome, this.ctx.cookActor);
 
     await CookService.applyEffectsToActors(fedIds, foodEffect, quirkEffect);
     const leftovers = this.maxPortions - fedIds.length;
     await CookService.createLeftovers(this.ctx.cookActor, leftovers, foodEffect, quirkEffect, this.ctx.outcome === "ruined");
-    
+
     let qHtml = "";
     if (this.ctx.outcome === "positive") qHtml = `<div style="background:#dcfce7; color:#166534; padding:4px; border-radius:4px; font-size:11px; margin-bottom:6px;"><b>✨ Причуда: ${this.ctx.quirk.name}</b><br>${this.ctx.quirk.desc}</div>`;
     if (this.ctx.outcome === "negative") qHtml = `<div style="background:#fee2e2; color:#991b1b; padding:4px; border-radius:4px; font-size:11px; margin-bottom:6px;"><b>🤢 Причуда: ${this.ctx.quirk.name}</b><br>${this.ctx.quirk.desc}</div>`;
@@ -62,8 +61,8 @@ const fedIds = []; const fedNames = [];
         ${this.ctx.outcome === "ruined" ? "Стряпня испорчена!" : "Приготовлено: " + this.ctx.recipe.name}
         </h3>
         <div style="font-size: 11px; font-family: monospace; margin-bottom: 6px; color: #92400e;">Проверка: <b>${this.ctx.totalCheck}</b> (СЛ ${this.ctx.baseDC})<br>Формула: ${this.ctx.formulaStr}</div>
-        ${this.ctx.outcome === "ruined" ? `<p style="margin: 0 0 6px; font-size: 12px; color:#dc2626;">Ядовитая жижа. Отравление на 1 час.</p>` : `<p style="margin: 0 0 6px; font-size: 12px;"><b>Основа:</b> ${HOTPOT_CONFIG.damageLabels[this.ctx.dmgType] || this.ctx.dmgType} (${this.ctx.dominantType})<br><b>Эффект:</b> ${this.ctx.recipe.desc}</p>`}
-        ${qHtml}
+        ${this.ctx.outcome === "ruined" ? `<p style="margin: 0 0 6px; font-size: 12px; color:#dc2626;">Ядовитая жижа. Отравление на 1 час.</p>` : `<p style="margin: 0 0 6px; font-size: 12px;"><b>Основа:</b> 
+          ${CONFIG.DND5E.damageTypes[this.ctx.dmgType]?.label || this.ctx.dmgType} (${this.ctx.dominantType})<br><b>Эффект:</b> ${this.ctx.recipe.desc}</p>`}        ${qHtml}
         <div style="font-size: 12px; margin-top:8px;">
             <b>Поели:</b> ${fedNames.length > 0 ? fedNames.join(", ") : "<i>Никто не рискнул</i>"}<br>
             <b>Сохранено в инвентарь:</b> ${leftovers} порц.

@@ -28,7 +28,7 @@ export class HarvestService {
     if (newCurrent === 0) ui.notifications.warn("В Наборе Свежевателя закончились инструменты и соли!");
   }
 
-static async applyHarvestEffect(ctx) {
+  static async applyHarvestEffect(ctx) {
     // 1. Трата зарядов набора
     if (ctx.kit) {
       await this.consumeKitCharge(ctx.playerActor, ctx.kit, ctx.sizeData?.charge ?? 1);
@@ -42,9 +42,9 @@ static async applyHarvestEffect(ctx) {
     if (hasGutted) return;
 
     // 2. Формируем ЕДИНЫЙ эффект (и иконка, и невидимость разом)
-    const effectData = { 
-      name: "Распотрошен", 
-      icon: "icons/skills/wounds/injury-abdomen-blood-red.webp", 
+    const effectData = {
+      name: "Распотрошен",
+      icon: "icons/skills/wounds/injury-abdomen-blood-red.webp",
       flags: { core: { overlay: false } },
       statuses: ["invisible"] // Встроенная магия Фаундри: автоматом скроет токен!
     };
@@ -53,14 +53,14 @@ static async applyHarvestEffect(ctx) {
     if (actor.isOwner) {
       // Есть права (ГМ) — вешаем напрямую
       await actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
-    } 
+    }
     else if (globalThis.MidiQOL?.socket) {
       // Нет прав (Игрок) — отдаем объект Midi-QOL, он всё сделает за нас
-      await globalThis.MidiQOL.socket().executeAsGM("createEffects", { 
-        actorUuid: actor.uuid, 
-        effects: [effectData] 
+      await globalThis.MidiQOL.socket().executeAsGM("createEffects", {
+        actorUuid: actor.uuid,
+        effects: [effectData]
       });
-    } 
+    }
     else {
       console.warn("Hunters Hotpot | Нет прав на токен и не найден Midi-QOL. Эффекты не применены.");
     }
@@ -69,7 +69,18 @@ static async applyHarvestEffect(ctx) {
   static async generateLoot(ctx, selections, rollData, essObtained, essData) {
     let container = ctx.playerActor.items.find(i => i.type === "container" && i.name.includes("Мешок подарков"));
     if (!container) {
-      const cData = { name: "Мешок подарков", type: "container", img: "icons/containers/bags/sack-leather-pink.webp", system: { capacity: { type: "weight", value: 9999 } } };
+      const cData = {
+        name: "Мешок подарков",
+        type: "container",
+        img: "icons/containers/bags/sack-leather-pink.webp",
+        system: {
+          capacity: {
+            type: "weight",
+            value: 9999
+          }
+        },
+        flags: { "hunters-hotpot": { isGiftBag: true} }
+      };
       const created = await ctx.playerActor.createEmbeddedDocuments("Item", [cData]);
       container = created[0];
     }
@@ -136,7 +147,7 @@ static async applyHarvestEffect(ctx) {
             quantity: i.q, weight: { value: Number(i.w), units: "lb" }, price: { value: finalPrice, denomination: "gp" },
             description: { value: descHtml }
           },
-          flags: { "hunters-hotpot": { componentId: i.id, sourceMonster: ctx.mName, sourceType: ctx.mType, isPristine: rollData.isCrit, craftType: i.cType, cookBase: i.base, slots: i.slots } }
+          flags: { "hunters-hotpot": { componentId: i.id, sourceMonster: ctx.mName, sourceType: ctx.mType, isPristine: rollData.isCrit, craftType: i.cType, cookBase: i.base } }
         });
       }
 

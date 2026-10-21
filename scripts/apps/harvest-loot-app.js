@@ -16,16 +16,18 @@ export class HarvestLootApp extends HandlebarsApplicationMixin(ApplicationV2) {
     super(options); this.ctx = ctx; this.rollData = rollData; this.essObtained = essObtained; this.essData = essData;
   }
 
-  async _prepareContext() {
+async _prepareContext() {
     const crMult = HOTPOT_CONFIG.getCrMult(this.ctx.cr);
     const priceMod = this.rollData.isCrit ? 2 : 1;
-    const maxSlots = this.ctx.sizeData.s;
-    const sizeMult = this.ctx.sizeData.mWeight || 1; 
+    const maxSlots = this.ctx.sizeData.s; 
     
     // БАЛАНС: Считываем настройку множителя количества добычи
-    const yieldMult = game.settings.get("hunters-hotpot", "harvestYieldMultiplier");
-    const yieldPerSlot = Math.max(1, Math.floor(Math.pow(2, this.ctx.sizeData.s - 3) * yieldMult));
+    const yieldMult = game.settings.get("hunters-hotpot", "harvestYieldMultiplier") ?? 1;
+    const yieldPerSlot = Math.max(1, Math.floor(Math.pow(2, maxSlots - 3) * yieldMult));
     this.ctx.yieldPerSlot = yieldPerSlot;
+
+    // ВЕС: Экспоненциальный рост (х3 за каждый размер от Среднего).
+    const weightMult = Math.pow(3, maxSlots - 2);
     
     const availableCategories = [];
     
@@ -38,11 +40,20 @@ export class HarvestLootApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const rows = [];
 
       if (data.u) {
-        const totalW = Number((data.w * sizeMult).toFixed(2)); 
-        const slotsReq = Math.max(1, Math.ceil(totalW / 200)); 
+        // --- НЕДЕЛИМЫЕ КОМПОНЕНТЫ ---
+        const totalW = Number((data.w * weightMult).toFixed(1)); 
         
-        const maxPossibleOrgans = Math.floor(maxSlots / slotsReq);
-        const rowCount = Math.max(1, Math.min(5, maxPossibleOrgans || 1)); 
+        let slotsReq = 1;
+        if (key === "appendage") slotsReq = yieldPerSlot;
+        else if (key === "organ" || key === "focus" || key === "unique") slotsReq = yieldPerSlot / 2;
+        else if (key === "gland") slotsReq = yieldPerSlot / 4;
+        
+        slotsReq = Math.max(1, Math.floor(slotsReq));
+
+        const maxPossibleItems = Math.floor(maxSlots / slotsReq);
+        
+        // ВСЕГДА выводим минимум 1 строку, даже если maxPossibleItems = 0 (не хватает слотов)
+        const rowCount = Math.max(1, key === "unique" ? Math.min(1, maxPossibleItems) : Math.min(5, maxPossibleItems));
 
         for (let i = 0; i < rowCount; i++) {
           rows.push({
@@ -52,11 +63,12 @@ export class HarvestLootApp extends HandlebarsApplicationMixin(ApplicationV2) {
           });
         }
       } else {
+        // --- МАССОВЫЕ КОМПОНЕНТЫ ---
         const rowCount = Math.min(maxSlots, 5); 
         for (let i = 0; i < rowCount; i++) {
           rows.push({
             idx: i, isFirst: i === 0,
-            w: Number(data.w.toFixed(2)), p: piecePrice, baseDc: data.dc,
+            w: Number(data.w.toFixed(1)), p: piecePrice, baseDc: data.dc,
             categoryId: key, slotsReq: 1, isIndivisible: false
           });
         }

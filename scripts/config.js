@@ -1,11 +1,11 @@
 export const HOTPOT_CONFIG = {
     sizes: {
-        tiny: { label: "Крошечный", s: 1, h: 1, mWeight: 0.125, baseMin: 5, charge: 0 },
-        sm: { label: "Маленький", s: 2, h: 1, mWeight: 0.25, baseMin: 15, charge: 1 },
-        med: { label: "Средний", s: 3, h: 2, mWeight: 1.0, baseMin: 30, charge: 2 },
-        lg: { label: "Большой", s: 4, h: 3, mWeight: 8.0, baseMin: 60, charge: 8 },
-        huge: { label: "Огромный", s: 5, h: 4, mWeight: 64.0, baseMin: 120, charge: 20 },
-        grg: { label: "Гигантский", s: 6, h: 5, mWeight: 512.0, baseMin: 480, charge: 50 }
+        tiny: { label: "Крошечный", s: 1, h: 1, baseMin: 5, charge: 0 },
+        sm: { label: "Маленький", s: 2, h: 1, baseMin: 15, charge: 1 },
+        med: { label: "Средний", s: 3, h: 2, baseMin: 30, charge: 2 },
+        lg: { label: "Большой", s: 4, h: 3, baseMin: 60, charge: 8 },
+        huge: { label: "Огромный", s: 5, h: 4, baseMin: 120, charge: 20 },
+        grg: { label: "Гигантский", s: 6, h: 5, baseMin: 480, charge: 50 }
     },
 
     damageMapping: {
@@ -13,13 +13,6 @@ export const HOTPOT_CONFIG = {
         ooze: "acid", plant: "poison", fiend: "fire", fey: "force",
         giant: "bludgeoning", beast: "slashing", monstrosity: "thunder",
         construct: "lightning", dragon: "fire", elemental: "fire", humanoid: "piercing"
-    },
-
-    damageLabels: {
-        "psychic": "Психический", "radiant": "Излучение", "necrotic": "Некротический",
-        "acid": "Кислота", "poison": "Яд", "fire": "Огонь", "force": "Силовой",
-        "bludgeoning": "Дробящий", "slashing": "Рубящий", "thunder": "Гром",
-        "lightning": "Молния", "piercing": "Колющий"
     },
 
     statMapping: {
@@ -153,11 +146,11 @@ export const HOTPOT_CONFIG = {
 
     getSkill: (type) => {
         const t = (type || "").toLowerCase();
-        if (["aberration", "elemental", "fey", "construct"].includes(t)) return { key: "arc", name: "Магия (Arcana)" };
-        if (["celestial", "fiend"].includes(t)) return { key: "rel", name: "Религия (Religion)" };
-        if (["ooze", "plant"].includes(t)) return { key: "nat", name: "Природа (Nature)" };
-        if (["giant", "humanoid", "undead"].includes(t)) return { key: "med", name: "Медицина (Medicine)" };
-        return { key: "sur", name: "Выживание (Survival)" };
+        if (["aberration", "elemental", "fey", "construct"].includes(t)) return "arc";
+        if (["celestial", "fiend"].includes(t)) return "rel";
+        if (["ooze", "plant"].includes(t)) return"nat";
+        if (["giant", "humanoid", "undead"].includes(t)) return "med";
+        return "sur";
     },
 
     getEssence: (cr) => {

@@ -38,18 +38,25 @@ const HuntersHotpotAPI = {
 };
 
 Hooks.once("ready", async () => {
-  try {
-    // Асинхронно скачиваем базу рецептов
-    const response = await fetch("modules/hunters-hotpot/data/recipes.json");
-    const recipesData = await response.json();
-
-    // Подмешиваем скачанные рецепты в конфиг
-    HOTPOT_CONFIG.crafting.recipes = recipesData;
-
-    console.log("Hunters Hotpot | База рецептов успешно загружена:", Object.keys(recipesData).length, "шт.");
-  } catch (error) {
-    console.error("Hunters Hotpot | Ошибка загрузки базы рецептов!", error);
-  }
+// Внутри Hooks.once("ready", ...) добавь/замени этот блок:
+async function loadRecipes() {
+    try {
+        const response = await fetch("modules/hunters-hotpot/data/recipes.json");
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+        
+        const data = await response.json();
+        // Загружаем только если JSON валидный и не пустой
+        if (data && Object.keys(data).length > 0) {
+            HOTPOT_CONFIG.crafting.recipes = foundry.utils.mergeObject(HOTPOT_CONFIG.crafting.recipes || {}, data);
+        }
+    } catch (e) {
+        console.warn("Hunters Hotpot | Не удалось загрузить внешний recipes.json. Используются встроенные чертежи.", e);
+        // Ничего не ломаем, встроенный HOTPOT_CONFIG.crafting.recipes остается целым
+    } finally {
+        HOTPOT_CONFIG._isLoaded = true; // Сигнал для интерфейсов, что база готова
+    }
+}
+loadRecipes();
 });
 
 // Привязываем API к window, чтобы макросы работали напрямую через HuntersHotpot.cook()
@@ -71,7 +78,7 @@ Hooks.once("init", () => {
 // ==========================================
 Hooks.on("dnd5e.getItemContextOptions", (item, options) => {
   const isKit = item.flags?.["hunters-hotpot"]?.isKit || item.name.toLowerCase().includes("набор свежевателя");
-  const isBag = item.name.includes("Мешок подарков") && item.type === "container";
+  const isBag = item.getFlag("hunters-hotpot", "isGiftBag") && item.type === "container";
   const isMaterial = item.flags?.["hunters-hotpot"] && item.flags["hunters-hotpot"].craftType;
 
   // 1. Мешок подарков -> Готовка и Верстак

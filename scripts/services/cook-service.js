@@ -66,38 +66,37 @@ export class CookService {
 
     switch (recipe.effectKey) {
       case "bonusDamage":
-        changes.push({ key: "system.bonuses.mwak.damage", mode: 2, value: `+ ${s}[${dmgType}]` }); 
-        changes.push({ key: "system.bonuses.rwak.damage", mode: 2, value: `+ ${s}[${dmgType}]` }); 
-        changes.push({ key: "system.bonuses.msak.damage", mode: 2, value: `+ ${s}[${dmgType}]` }); 
-        changes.push({ key: "system.bonuses.rsak.damage", mode: 2, value: `+ ${s}[${dmgType}]` }); 
+        changes.push({ key: "system.bonuses.mwak.damage", mode: 2, value: `+ ${s}[${dmgType}]` });
+        changes.push({ key: "system.bonuses.rwak.damage", mode: 2, value: `+ ${s}[${dmgType}]` });
+        changes.push({ key: "system.bonuses.msak.damage", mode: 2, value: `+ ${s}[${dmgType}]` });
+        changes.push({ key: "system.bonuses.rsak.damage", mode: 2, value: `+ ${s}[${dmgType}]` });
         break;
-      
+
       case "maxHp":
-        changes.push({ key: "system.attributes.hp.tempmax", mode: 2, value: s === "1" ? "5" : `5 * ${s}` }); 
+        changes.push({ key: "system.attributes.hp.tempmax", mode: 2, value: s === "1" ? "5" : `5 * ${s}` });
         break;
-      
+
       case "drElement":
-        changes.push({ key: `system.traits.dm.amount.${dmgType}`, mode: 2, value: `- ${s}` }); 
+        changes.push({ key: `system.traits.dm.amount.${dmgType}`, mode: 2, value: `- ${s}` });
         break;
-      
+
       case "bonusChecks":
-        changes.push({ key: "system.bonuses.abilities.check", mode: 2, value: `+ ${s}` }); 
+        changes.push({ key: "system.bonuses.abilities.check", mode: 2, value: `+ ${s}` });
         break;
-      
+
       case "bonusSaves":
-        changes.push({ key: "system.bonuses.abilities.save", mode: 2, value: `+ ${s}` }); 
+        changes.push({ key: "system.bonuses.abilities.save", mode: 2, value: `+ ${s}` });
         break;
-        
+
       default:
         changes.push({ key: "system.bonuses.mwak.damage", mode: 2, value: `${s}[${dmgType}]` });
     }
 
     return {
       _id: foundry.utils.randomID(),
-      name: `Сытость: ${recipe.name} (${HOTPOT_CONFIG.damageLabels?.[dmgType] || dmgType})`,
-      icon: recipe.img, img: recipe.img,
+      name: `Сытость: ${recipe.name} (${CONFIG.DND5E.damageTypes[dmgType]?.label || dmgType})`, icon: recipe.img, img: recipe.img,
       changes,
-      duration: { seconds: 28800 }, 
+      duration: { seconds: 28800 },
       origin: cookActor.uuid,
       transfer: false
     };
@@ -140,10 +139,10 @@ export class CookService {
   static async createLeftovers(cookActor, quantity, foodEffect, quirkEffect, isRuined) {
     if (quantity <= 0) return;
     const activityId = foundry.utils.randomID();
-    
+
     let effectsToAttach = [foundry.utils.deepClone(foodEffect)];
     let effectRefs = [{ _id: foodEffect._id }];
-    
+
     if (quirkEffect) {
       effectsToAttach.push(foundry.utils.deepClone(quirkEffect));
       effectRefs.push({ _id: quirkEffect._id });

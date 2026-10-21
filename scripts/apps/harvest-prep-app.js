@@ -24,11 +24,12 @@ export class HarvestPrepApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const mSize = targetToken.actor.system.traits?.size || "med";
       const sizeData = HOTPOT_CONFIG.sizes[mSize] || HOTPOT_CONFIG.sizes["med"];
       const kit = HarvestService.validateKit(playerActor, sizeData);
+      const sKey = HOTPOT_CONFIG.getSkill(mType);
 
       const ctx = {
         playerActor, targetToken, mName: targetToken.name, mType,
         cr: targetToken.actor.system.details?.cr || 0,
-        sizeData, skillInfo: HOTPOT_CONFIG.getSkill(mType), kit
+        sizeData, skillInfo: { key: sKey, name: CONFIG.DND5E.skills[sKey]?.label || sKey }, kit
       };
       new HarvestPrepApp(ctx).render(true);
     } catch (error) {
