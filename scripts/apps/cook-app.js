@@ -1,5 +1,6 @@
 import { HOTPOT_CONFIG } from "../config.js";
 import { CookDistributeApp } from "./cook-distribute-app.js";
+import { CookService } from "../services/cook-service.js";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -35,7 +36,7 @@ export class CookApp extends HandlebarsApplicationMixin(ApplicationV2) {
     });
   }
 
-async _prepareContext() {
+  async _prepareContext() {
     const helpers = game.actors.filter(a => a.type === "character" && a.id !== this.actor.id).map(a => ({ id: a.id, name: a.name, img: a.img, bonus: a.system.attributes?.prof || 2 }));
     const typeOptions = Object.keys(this.groups).map(k => ({ key: k, label: `${HOTPOT_CONFIG.cooking.recipes.tier1[k].name} (${this.groups[k].length} стаков)` }));
 
@@ -54,7 +55,7 @@ async _prepareContext() {
         const q = Number(i.system.quantity || 1);
         const baseW = Number(i.system.weight?.value || 0);
         const totalW = baseW * q; // Полный вес всего стака
-        
+
         const isU = i.flags["hunters-hotpot"].slotsUsed > 1 || totalW >= 200 || ["Сердце", "Печень", "Глаз", "Мозг", "Яйцо"].some(n => i.name.includes(n));
 
         return {
@@ -78,7 +79,7 @@ async _prepareContext() {
     this._updatePotUI();
   }
 
-_updatePotUI() {
+  _updatePotUI() {
     const form = this.element;
     const baseTypeEl = form.querySelector("#base-type");
     if (!baseTypeEl) return;
@@ -115,7 +116,7 @@ _updatePotUI() {
         const isU = cb.dataset.u === "true";
         const type = cb.dataset.type || "beast";
 
-        if (tempTarget <= 0 && !isU) continue; 
+        if (tempTarget <= 0 && !isU) continue;
 
         const take = isU ? w : Math.min(tempTarget, w);
         curWeight += take;
@@ -161,9 +162,9 @@ _updatePotUI() {
   async _onSubmit(event, form, formData) {
     const { baseType, portions, essId } = formData.object;
     const reqPortions = parseInt(portions) || 1;
-    
-    // БАЛАНС: Считываем настройку веса порции из настроек мира
-    const weightPerPortion = game.settings.get("hunters-hotpot", "cookPortionWeight");
+
+    // Считываем настройку веса порции из настроек мира
+    const weightPerPortion = game.settings.get("hunters-hotpot", "cookPortionWeight") || 2;
     const requiredWeight = reqPortions * weightPerPortion;
 
     let helperBonus = 0;
@@ -190,18 +191,25 @@ _updatePotUI() {
     const roll = await new Roll("1d20").evaluate();
     const totalCheck = roll.total + conMod + pb + helperBonus;
 
-    let outcome = "normal", quirk = null;
-    if (totalCheck <= baseDC - 13) { outcome = "ruined"; }
-    else if (roll.total === 20 || totalCheck >= baseDC + 5) { outcome = "positive"; quirk = HOTPOT_CONFIG.cooking.quirks.positive[Math.floor(Math.random() * 8)]; }
-    else if (totalCheck < baseDC) { outcome = "negative"; quirk = HOTPOT_CONFIG.cooking.quirks.negative[Math.floor(Math.random() * 8)]; }
+    // 1. Определяем исход готовки
+    let outcome = "normal";
+    if (totalCheck <= baseDC - 5) {
+      outcome = "ruined";
+    } else if (roll.total === 20 || totalCheck >= baseDC + 10) {
+      outcome = "positive"; // Шедевр!
+    }
 
-    let essData = HOTPOT_CONFIG.essenceScaling["common"];
+    // 2. Бросаем кубик эссенции
+    let essDice = "1";
     if (essId !== "none") {
       const eItem = this.actor.items.get(essId);
       const sysRarity = eItem.system?.rarity || "common";
-      essData = HOTPOT_CONFIG.essenceScaling[sysRarity] || essData;
+      essDice = HOTPOT_CONFIG.essenceScaling[sysRarity]?.dice || "1";
     }
+    const essRoll = await new Roll(essDice).evaluate();
+    const essFlat = essRoll.total;
 
+    // 3. Высчитываем перевес и доминирующий тип монстра
     let typeWeights = {};
     let targetW = requiredWeight;
 
@@ -213,27 +221,51 @@ _updatePotUI() {
       typeWeights[s.type] = (typeWeights[s.type] || 0) + take;
     }
 
-const finalPortions = targetW < 0 ? reqPortions + Math.floor(Math.abs(targetW) / weightPerPortion) : reqPortions;
-    
+    // 4. ТЕПЕРЬ считаем финальные порции (так как targetW посчитан)
+    const finalPortions = targetW < 0 ? reqPortions + Math.floor(Math.abs(targetW) / weightPerPortion) : reqPortions;
+
     let dominantType = "beast";
     if (Object.keys(typeWeights).length > 0) {
       dominantType = Object.keys(typeWeights).reduce((a, b) => typeWeights[a] > typeWeights[b] ? a : b);
     }
 
-    // --- НОВОЕ: Определяем итоговую стихию ---
+    // 5. Выбор стихии для драконов и элементалей
     let dmgType = HOTPOT_CONFIG.damageMapping[dominantType] || "fire";
     if (dominantType === "dragon" || dominantType === "elemental") {
       const customDmg = form.querySelector("#custom-dmg-type");
       if (customDmg) dmgType = customDmg.value;
     }
 
+// 1. Собираем имена ингредиентов
+    const ingredientNames = new Set();
+    for (let s of selected) {
+      const item = this.actor.items.get(s.id);
+      if (item) ingredientNames.add(item.name);
+    }
+    if (essId && essId !== "none") {
+      const essItem = this.actor.items.get(essId);
+      if (essItem) ingredientNames.add(essItem.name);
+    }
+    const ingredientsText = Array.from(ingredientNames).join(", ");
+
+    // 2. Списываем ингредиенты
+    await CookService.consumeIngredients(this.actor, selected, requiredWeight, essId);
+
+    // 3. Генерируем эффект и СОЗДАЕМ ЕДУ В РЮКЗАКЕ ДО открытия окна!
+    const specificStat = HOTPOT_CONFIG.statMapping[dominantType] || "con";
+    const recipe = HOTPOT_CONFIG.cooking.recipes.tier1[baseType];
+    const foodEffect = CookService.generateEffectData(outcome, recipe, essDice, essFlat, dmgType, dominantType, specificStat, this.actor);
+    
+    const createdItems = await CookService.createLeftovers(this.actor, finalPortions, foodEffect, outcome === "ruined");
+    const leftoverItemId = createdItems.length > 0 ? createdItems[0].id : null;
+
     const formulaStr = `1к20[<b>${roll.total}</b>] ${conMod >= 0 ? '+' + conMod : conMod}(Тел) ${pb > 0 ? '+' + pb + '(Инстр.)' : ''} ${helperBonus > 0 ? '+' + helperBonus + '(Помощь)' : ''}`;
 
     const ctx = {
-      cookActor: this.actor, outcome, baseType, recipe: HOTPOT_CONFIG.cooking.recipes.tier1[baseType],
-      essData, dmgType, // <-- Передаем именно нашу перехваченную стихию!
-      dominantType, specificStat: HOTPOT_CONFIG.statMapping[dominantType] || "con",
-      finalPortions, quirk, totalCheck, baseDC, formulaStr, selectedItems: selected, reqPortions, requiredWeight, essId
+      cookActor: this.actor, outcome, baseType, recipe,
+      essDice, essFlat, dmgType, dominantType, specificStat,
+      finalPortions, totalCheck, baseDC, formulaStr, selectedItems: selected, reqPortions, requiredWeight, essId,
+      ingredientsText, foodEffect, leftoverItemId // <-- Передаем эффект и ID созданного предмета!
     };
 
     new CookDistributeApp(ctx).render(true);

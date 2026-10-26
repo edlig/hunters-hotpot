@@ -1,24 +1,29 @@
 <div class="hh-app-content" data-max="{{maxPortions}}">
-  <div style="background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 12px; text-align:center;">
+  <div
+    style="background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155; margin-bottom: 12px; text-align:center;">
     <h3 style="margin:0 0 4px; color:#38bdf8; display:flex; align-items:center; justify-content:center; gap:8px;">
       <img src="{{effectIcon}}" style="width: 24px; height: 24px; border-radius:4px; border: none;">
       {{effectName}}
     </h3>
-    <p style="margin:0; font-size:13px; color:#fbbf24; font-weight:bold;">Доступно порций: <span id="dist-avail">{{maxPortions}}</span></p>
+    <p style="margin:0; font-size:13px; color:#fbbf24; font-weight:bold;">Доступно порций: <span
+        id="dist-avail">{{maxPortions}}</span></p>
   </div>
-  
+
   <div style="font-size:11px; color:#94a3b8; font-weight:bold; margin-bottom:6px;">КТО ЕСТ СЕЙЧАС?</div>
   <div style="max-height: 200px; overflow-y: auto; padding-right:4px;">
     {{#each eaters}}
-      <label style="display:flex; align-items:center; background:#1e293b; padding:6px 10px; border:1px solid #334155; border-radius:6px; margin-bottom:4px; cursor:pointer;">
-        <input type="checkbox" class="eater-cb" data-action="toggleEater" data-id="{{this.id}}" data-name="{{this.name}}" style="margin-right:10px; transform:scale(1.2);">
-        <img src="{{this.img}}" style="width:28px; height:28px; border-radius:50%; margin-right:10px; object-fit:cover;">
-        <b style="color:#f8fafc; font-size:13px;">{{this.name}} {{#if this.isCook}}(Повар){{/if}}</b>
-      </label>
+    <label
+      style="display:flex; align-items:center; background:#1e293b; padding:6px 10px; border:1px solid #334155; border-radius:6px; margin-bottom:4px; cursor:pointer;">
+      <input type="checkbox" class="eater-cb" data-id="{{this.id}}" data-name="{{this.name}}" {{#if this.isCook}}checked
+        disabled{{/if}}>
+      <img src="{{this.img}}" style="width:28px; height:28px; border-radius:50%; margin-right:10px; object-fit:cover;">
+      <b style="color:#f8fafc; font-size:13px;">{{this.name}} {{#if this.isCook}}(Повар){{/if}}</b>
+    </label>
     {{/each}}
   </div>
 
-  <button type="submit" id="submit-btn" style="background: #0f172a; color: #f8fafc; border: 1px solid #475569; padding: 8px; border-radius: 4px; width: 100%; cursor: pointer; margin-top: 10px;">
+  <button type="submit" id="submit-btn"
+    style="background: #0f172a; color: #f8fafc; border: 1px solid #475569; padding: 8px; border-radius: 4px; width: 100%; cursor: pointer; margin-top: 10px;">
     <i class="fas fa-utensils"></i> Накормить
   </button>
 </div>

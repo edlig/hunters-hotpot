@@ -39,61 +39,39 @@ export const HOTPOT_CONFIG = {
                     name: "Сочный стейк",
                     reqBase: "meat",
                     img: "icons/consumables/food/steak-cooked-grilled-brown.webp",
-                    desc: "Ваши атаки насыщаются уроном стихии монстра. Сила эффекта зависит от эссенции.",
+                    desc: "Ваши атаки насыщаются уроном стихии монстра.",
                     effectKey: "bonusDamage",
                 },
                 "fluid_sausage": {
                     name: "Кровяная колбаса",
                     reqBase: "fluid",
                     img: "icons/consumables/food/sausage-bratwurst-mustard-red-yellow.webp",
-                    desc: "Кровь чудовища расширяет ваши физические пределы. Увеличивает максимум ХП на значение эссенции.",
+                    desc: "Кровь чудовища расширяет ваши физические пределы.",
                     effectKey: "maxHp",
                 },
                 "bone_broth": {
                     name: "Костный бульон",
                     reqBase: "bone",
                     img: "icons/consumables/food/bowl-stew-brown.webp",
-                    desc: "Костяк зверя закаляет ваше тело. Вы получаете плоское снижение входящего урона от стихии монстра.",
+                    desc: "Костяк зверя закаляет ваше тело.",
                     effectKey: "drElement",
                 },
                 "organ_pie": {
                     name: "Ливерный пирог",
                     reqBase: "organ",
                     img: "icons/consumables/food/plate-pasta-noodles-white-red.webp",
-                    desc: "Первобытные инстинкты обостряют ваши навыки. Вы добавляете кость эссенции к проверкам навыков характерискики монстра.",
+                    desc: "Первобытные инстинкты обостряют ваши навыки.",
                     effectKey: "bonusChecks",
                 },
                 "mystic_soup": {
                     name: "Мерцающая похлебка",
                     reqBase: "mystic",
                     img: "icons/commodities/materials/bowl-liquid-white.webp",
-                    desc: "Чужеродная магия защищает ваш разум и тело. Вы добавляете кость эссенции к спасброскам характерискики монстра.",
+                    desc: "Чужеродная магия защищает ваш разум и тело.",
                     effectKey: "bonusSaves",
                 }
             }
-        },
-        quirks: {
-            positive: [
-                { name: "Железный желудок", desc: "Устойчивость урону ядом и преимущество в спасах от отравления.", eff: [{ key: "system.traits.dr.value", mode: 0, value: "poison" }, { key: "flags.midi-qol.advantage.ability.save.con", mode: 0, value: "1" }] },
-                { name: "Сладкое Дыхание", desc: "+1 к проверкам Харизмы против существ, чувствующих запах.", eff: [] },
-                { name: "Обучение Лингвиста", desc: "Вы понимаете язык съеденного существа.", eff: [] },
-                { name: "Медленный расход энергии", desc: "+1 к спасброскам на поддержание концентрации.", eff: [{ key: "system.bonuses.abilities.save", mode: 2, value: "1" }] },
-                { name: "Фантастическое бесстрашие", desc: "Вы невосприимчивы к состоянию испуга.", eff: [{ key: "system.traits.ci.value", mode: 0, value: "frightened" }] },
-                { name: "Крепкая хватка", desc: "Преимущество на проверки Силы. Вы считаетесь на 1 размер больше.", eff: [{ key: "flags.midi-qol.advantage.ability.check.str", mode: 0, value: "1" }, { key: "flags.dnd5e.powerfulBuild", mode: 0, value: "1" }] },
-                { name: "Спокойное пищеварение", desc: "Больше исцеления при трате костей хитов на отдыхе.", eff: [] },
-                { name: "Фаст Фуд", desc: "Ваша скорость увеличивается на 5 футов.", eff: [{ key: "system.attributes.movement.walk", mode: 2, value: "+5" }] }
-            ],
-            negative: [
-                { name: "Месть Ротворта", desc: "Вы отравлены и не можете отдыхать.", eff: [] },
-                { name: "Тошнотворный Кошмар", desc: "-1 к проверкам Инт, Муд, Хар и Инициативе.", eff: [{ key: "system.attributes.init.bonus", mode: 2, value: "-1" }] },
-                { name: "Косноязычие", desc: "Вы можете говорить только на языке съеденного существа.", eff: [] },
-                { name: "Напыщенность", desc: "Зловонные газы. -1 к проверкам Скрытности и Харизмы.", eff: [{ key: "system.skills.ste.bonuses.check", mode: 2, value: "-1" }] },
-                { name: "Бомба Борборугмуса", desc: "-1 к концентрации.", eff: [] },
-                { name: "Высокогликемический", desc: "-1 к проверкам и спасам Ловкости.", eff: [] },
-                { name: "Аллергическая реакция", desc: "Сыпь. Спасбросок Тел. СЛ 10 каждый ход.", eff: [] },
-                { name: "Переедание", desc: "Чувство вздутия. Скорость снижена на 5 футов.", eff: [{ key: "system.attributes.movement.walk", mode: 2, value: "-5" }] }
-            ]
-        },
+        }
     },
 
 
@@ -193,20 +171,20 @@ export const HOTPOT_CONFIG = {
             presets: ["Хвост", "Щупальце", "Крыло", "Плавник", "Ложноножка"], t: ["aberration", "beast", "dragon", "monstrosity", "fiend", "fey", "celestial"]
         },
         "fluid": {
-            label: "Биожидкости", img: "icons/consumables/potions/round-decorated-snake-green.webp", dc: 15, w: 1, p: 1.5, u: false, cType: "alchemy", cookBase: "fluid",
+            label: "Биожидкости", img: "icons/consumables/potions/round-decorated-snake-green.webp", dc: 15, w: 5, p: 1.5, u: false, cType: "alchemy", cookBase: "fluid",
             presets: ["Кровь", "Ихор", "Слизь", "Кислота", "Древесный сок", "Машинное масло", "Жидкое пламя"], t: ["aberration", "beast", "dragon", "monstrosity", "giant", "fiend", "fey", "plant", "ooze", "construct", "elemental", "celestial", "humanoid"]
         },
         // ТИР 3 (СЛ 20)
         "organ": {
-            label: "Внутренние органы", img: "icons/commodities/biological/organ-brain-red.webp", dc: 20, w: 2, p: 4.0, u: true, cType: "alchemy", cookBase: "organ",
+            label: "Внутренние органы", img: "icons/commodities/biological/organ-brain-red.webp", dc: 20, w: 5, p: 4.0, u: true, cType: "alchemy", cookBase: "organ",
             presets: ["Сердце", "Печень", "Желудок", "Жабры", "Легкие"], t: ["aberration", "beast", "dragon", "monstrosity", "giant", "fiend", "fey", "celestial", "humanoid"]
         },
         "gland": {
-            label: "Железы и Токсины", img: "icons/commodities/biological/pustules-brown.webp", dc: 20, w: 1, p: 10.0, u: true, cType: "alchemy", cookBase: "spice",
+            label: "Железы и Токсины", img: "icons/commodities/biological/pustules-brown.webp", dc: 20, w: 3, p: 10.0, u: true, cType: "alchemy", cookBase: "spice",
             presets: ["Ядовитая железа", "Кислотный мешок", "Споровик", "Газовый пузырь"], t: ["aberration", "beast", "dragon", "monstrosity", "plant", "ooze", "fiend"]
         },
         "dust": {
-            label: "Эфирный осадок", img: "icons/commodities/materials/powder-teal.webp", dc: 20, w: 0.5, p: 8.0, u: false, cType: "alchemy", cookBase: "spice",
+            label: "Эфирный осадок", img: "icons/commodities/materials/powder-teal.webp", dc: 20, w: 2, p: 8.0, u: false, cType: "alchemy", cookBase: "spice",
             presets: ["Эктоплазма", "Пепел", "Волшебная пыльца", "Теневая материя"], t: ["fey", "fiend", "celestial", "elemental", "undead", "ooze"]
         },
         // ТИР 4 (СЛ 25)
