@@ -17,26 +17,53 @@ export class HarvestPrepApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static PARTS = { form: { template: "modules/hunters-hotpot/templates/harvest-prep.hbs" } };
 
-  static async init(playerActor, targetToken) {
+static async init(playerActor, targetToken) {
     try {
       HarvestService.validateTarget(targetToken);
+
+      const hasFlag = targetToken.actor.getFlag("hunters-hotpot", "isHarvestCompleted");
+      const hasEffect = targetToken.actor.effects.some(e => e.name === "Распотрошен" || e.label === "Распотрошен");
+
+      // МАГИЯ ДЛЯ ГМа: Если эффекта нет, но флаг висит -> очищаем флаги базы (ГМ сделал сброс крестиком)
+      if (hasFlag && !hasEffect) {
+        await targetToken.actor.unsetFlag("hunters-hotpot", "isHarvestCompleted");
+        await targetToken.actor.unsetFlag("hunters-hotpot", "harvestSession");
+      } 
+      // Если же висит клеймо завершения (и эффект на месте) -> блокируем
+      else if (hasFlag || hasEffect) {
+        throw new Error("Эта туша уже полностью освежевана и обобрана!");
+      }
+
       const mType = targetToken.actor.system.details?.type?.value || "beast";
       const mSize = targetToken.actor.system.traits?.size || "med";
       const sizeData = HOTPOT_CONFIG.sizes[mSize] || HOTPOT_CONFIG.sizes["med"];
-      const kit = HarvestService.validateKit(playerActor, sizeData);
       const sKey = HOTPOT_CONFIG.getSkill(mType);
 
       const ctx = {
         playerActor, targetToken, mName: targetToken.name, mType,
         cr: targetToken.actor.system.details?.cr || 0,
-        sizeData, skillInfo: { key: sKey, name: CONFIG.DND5E.skills[sKey]?.label || sKey }, kit
+        sizeData, skillInfo: { key: sKey, name: CONFIG.DND5E.skills[sKey]?.label || sKey }
       };
+
+      // ЗАЩИТА ОТ СЕЙВСКАМА: Читаем сохраненную сессию
+      const session = targetToken.actor.getFlag("hunters-hotpot", "harvestSession");
+      if (session) {
+        if (session.actorId !== playerActor.id) {
+          throw new Error("Разделку этого существа уже начал другой персонаж!");
+        }
+        ui.notifications.info("Возвращаемся к прерванному сбору добычи...");
+        new HarvestLootApp(ctx, session.rollData, session.essObtained, session.essData).render(true);
+        return; // Пропускаем окно броска
+      }
+
+      const kit = HarvestService.validateKit(playerActor, sizeData);
+      ctx.kit = kit;
+
       new HarvestPrepApp(ctx).render(true);
     } catch (error) {
       ui.notifications.error(error.message);
     }
   }
-
   constructor(ctx, options = {}) { super(options); this.ctx = ctx; }
 
   async _prepareContext() {
@@ -92,14 +119,28 @@ export class HarvestPrepApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const rollData = { total: totalCheck, isCrit: roll.total === 20, baseRoll: roll.total, statMod, skillBonus, helpBonus, helpers: helpersList };
 
-    // Новая логика чтения матрицы вместо старой lootTable
     const eligible = Object.values(HOTPOT_CONFIG.harvestCategories).filter(data => data.t.includes(this.ctx.mType) && totalCheck >= data.dc);
+
+    // --- НОВОЕ: Немедленно списываем заряды Набора ДО открытия окна лута! ---
+    if (this.ctx.kit) {
+      await HarvestService.consumeKitCharge(this.ctx.playerActor, this.ctx.kit, this.ctx.sizeData?.charge ?? 1);
+    }
 
     if (eligible.length === 0 && !essObtained) {
       ui.notifications.warn(`Бросок (${totalCheck}) провален. Туша испорчена.`);
-      await HarvestService.applyHarvestEffect(this.ctx); // <--- Обновленный вызов
+      // Запечатываем тушу
+      await this.ctx.targetToken.actor.setFlag("hunters-hotpot", "isHarvestCompleted", true); 
+      await HarvestService.applyHarvestEffect(this.ctx); // Прячем токен
       return;
     }
+
+    // --- НОВОЕ: Записываем результаты броска во флаг монстра ---
+    await this.ctx.targetToken.actor.setFlag("hunters-hotpot", "harvestSession", {
+      actorId: this.ctx.playerActor.id,
+      rollData,
+      essObtained,
+      essData
+    });
 
     new HarvestLootApp(this.ctx, rollData, essObtained, essData).render(true);
   }

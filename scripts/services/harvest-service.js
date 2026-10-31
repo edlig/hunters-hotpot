@@ -2,12 +2,16 @@ import { HOTPOT_CONFIG } from "../config.js";
 import { KitService } from "./kit-service.js";
 
 export class HarvestService {
-  static validateTarget(token) {
+static validateTarget(token) {
     if (!token) throw new Error("Возьмите мертвого монстра в цель!");
     if (!token.actor) throw new Error("У этой цели нет листа персонажа.");
     if (token.actor.system.attributes.hp.value > 0) throw new Error("Оно еще живо! Сначала добейте.");
-    const isGutted = token.actor.effects.find(e => e.name === "Распотрошен" || e.label === "Распотрошен");
-    if (isGutted) throw new Error("Эта туша уже выпотрошена! Здесь больше нечего брать.");
+    
+    // Смотрим ТОЛЬКО на наличие эффекта. Удалишь эффект - вернешь тушу.
+    const hasEffect = token.actor.effects.some(e => e.name === "Распотрошен" || e.label === "Распотрошен");
+    if (hasEffect) {
+      throw new Error("Эта туша уже выпотрошена! Здесь больше нечего брать.");
+    }
   }
 
   static validateKit(actor, sizeData) {
@@ -29,10 +33,6 @@ export class HarvestService {
   }
 
   static async applyHarvestEffect(ctx) {
-    // 1. Трата зарядов набора
-    if (ctx.kit) {
-      await this.consumeKitCharge(ctx.playerActor, ctx.kit, ctx.sizeData?.charge ?? 1);
-    }
 
     const actor = ctx.targetToken.actor;
     if (!actor) return;
